@@ -1,0 +1,17 @@
+{% block title %}Experiment 1 — Session summary{% endblock %}
+{% block content %}
+<p>Valuation bin size: <b>{{ bin_size }}</b></p>
+<canvas id="g1" height="120"></canvas>
+<canvas id="g3" height="120" style="margin-top:12px;"></canvas>
+<p><b>Average revenue (overall):</b> {{ avg_rev_overall }}</p>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labelsBins={{ labels_bins_json|safe }};
+const avgBidBins={{ avg_bid_bins_json|safe }};
+const rounds={{ rounds_json|safe }};
+const avgRevRound={{ avg_rev_by_round_json|safe }};
+new Chart(document.getElementById('g1'),{type:'line',data:{labels:labelsBins,datasets:[{label:'Avg bid (all players)',data:avgBidBins}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+new Chart(document.getElementById('g3'),{type:'line',data:{labels:rounds,datasets:[{label:'Avg revenue by round',data:avgRevRound}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+</script>
+{{ next_button }}
+{% endblock %}
