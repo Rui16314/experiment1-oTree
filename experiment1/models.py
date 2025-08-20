@@ -1,5 +1,8 @@
-# experiment1/models.py
-from otree.api import *   # <-- brings in Base*, CurrencyField, IntegerField, BooleanField, cu, etc.
+from otree.api import (
+    BaseConstants, BaseSubsession, BaseGroup, BasePlayer,
+    Currency as cu, CurrencyField, IntegerField, BooleanField
+)
+  # <-- brings in Base*, CurrencyField, IntegerField, BooleanField, cu, etc.
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
