@@ -1,0 +1,30 @@
+{{ block title }}Session summary{{ endblock }}
+
+{{ block content }}
+<p><b>Average revenue (overall):</b> {{ avg_rev_overall }}</p>
+
+<canvas id="avg_bids" height="110"></canvas>
+<canvas id="avg_rev"  height="110" style="margin-top: 24px;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labelsBins   = {{ labels_bins_json|safe }};
+const avgBidBins   = {{ avg_bid_bins_json|safe }};
+const rounds       = {{ rounds_json|safe }};
+const avgRevByRnd  = {{ avg_rev_by_round_json|safe }};
+
+new Chart(document.getElementById('avg_bids'), {
+  type: 'bar',
+  data: { labels: labelsBins, datasets: [{ label: 'Avg bid by valuation bin', data: avgBidBins }]},
+  options: { scales: { y: { beginAtZero: true } } }
+});
+
+new Chart(document.getElementById('avg_rev'), {
+  type: 'line',
+  data: { labels: rounds, datasets: [{ label: 'Avg revenue by round', data: avgRevByRnd }]},
+  options: { scales: { y: { beginAtZero: true } } }
+});
+</script>
+
+{{ next_button }}
+{{ endblock }}
