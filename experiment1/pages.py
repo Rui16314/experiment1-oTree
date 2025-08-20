@@ -1,11 +1,20 @@
 # experiment1/pages.py
 from otree.api import *
-from .models import C, cu  # cu imported for safe defaulting
-
+from .models import C, cu
 
 class Instructions(Page):
     def is_displayed(self):
         return self.round_number == 1
+
+    def vars_for_template(self):
+        cfg = self.session.config
+        return dict(
+            price_rule=cfg.get('price_rule', getattr(C, 'PRICE_RULE', 'first')),
+            matching=cfg.get('matching', getattr(C, 'MATCHING', 'random')),
+            tie_rule=cfg.get('tie_rule', getattr(C, 'TIE_RULE', 'random')),
+            chat=bool(cfg.get('chat', False)),
+            num_rounds=C.NUM_ROUNDS,
+        )
 
 
 class Bid(Page):
