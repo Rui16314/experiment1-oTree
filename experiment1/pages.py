@@ -15,13 +15,15 @@ class Instructions(Page):
 
     def before_next_page(self, timeout_happened):
         """
-        Ensure each player's valuation is set before they reach Bid.
-        Doing it here avoids 'None' valuation errors on the Bid page.
+        Draw a valuation for round 1 so the first Bid page always has a value.
+        (Later rounds are drawn in creating_session; the Bid guard below
+        also handles any missed cases robustly.)
         """
         import random
         from otree.api import Currency as cu
-        # Draw a valuation in [0, 100], 2 decimal places
-        self.player.valuation = cu(round(random.uniform(0, 100), 2))
+        # Only set if missing (safe write)
+        if self.player.__dict__.get('valuation') is None:
+            self.player.valuation = cu(round(random.uniform(0, 100), 2))
 
 
 class Bid(Page):
@@ -29,24 +31,30 @@ class Bid(Page):
     form_fields = ['bid']
     timeout_seconds = 60
 
-    def vars_for_template(self):
-        # Safety net: if valuation weren't set for any reason, set it now.
-        if self.player.valuation is None:
+    def _ensure_valuation(self):
+        """
+        IMPORTANT: Do NOT read self.player.valuation before it's set.
+        Access the raw storage (instance.__dict__) first; if it's None,
+        set it, then it's safe to read self.player.valuation.
+        """
+        raw = self.player.__dict__.get('valuation')
+        if raw is None:
             import random
             from otree.api import Currency as cu
             self.player.valuation = cu(round(random.uniform(0, 100), 2))
+
+    def vars_for_template(self):
+        # Guarantee valuation exists without triggering the None access error.
+        self._ensure_valuation()
         return dict(valuation=self.player.valuation)
 
     def before_next_page(self, timeout_happened):
-        # Record whether they submitted within time
         self.player.submitted = not timeout_happened
         if timeout_happened:
-            # Missing bid if timed out
             self.player.bid = None
 
 
 class ResultsWaitPage(WaitPage):
-    # Compute price/winner/payoffs once both players submitted
     after_all_players_arrive = set_payoffs
 
 
@@ -67,10 +75,6 @@ class Results(Page):
 
 
 class SessionSummary(Page):
-    """
-    Shown after the last round; prepares lightweight aggregates
-    for the charts in SessionSummary.html.
-    """
     def is_displayed(self):
         return self.player.round_number == C.NUM_ROUNDS
 
@@ -78,7 +82,7 @@ class SessionSummary(Page):
         import json
         subsession = self.subsession
 
-        # ---- Average bid by valuation bin (width BIN) across all rounds/players
+        # Average bid by valuation bin
         BIN = 10
         n_bins = max(1, int(100 / BIN))
         labels = [f"{i*BIN}-{i*BIN+BIN-1}" for i in range(n_bins)]
@@ -87,15 +91,18 @@ class SessionSummary(Page):
 
         for r in range(1, C.NUM_ROUNDS + 1):
             for p in subsession.in_round(r).get_players():
-                if p.bid is not None and p.valuation is not None:
-                    v = float(p.valuation)
-                    b = float(p.bid)
-                    k = min(int(v // BIN), n_bins - 1)
-                    sums[k] += b
-                    counts[k] += 1
+                # Skip missing entries safely
+                if p.__dict__.get('valuation') is None or p.bid is None:
+                    continue
+                v = float(p.valuation)
+                b = float(p.bid)
+                k = min(int(v // BIN), n_bins - 1)
+                sums[k] += b
+                counts[k] += 1
+
         avg_by_bin = [(s / c if c > 0 else 0) for s, c in zip(sums, counts)]
 
-        # ---- Average revenue (transaction price) by round
+        # Average revenue by round
         rounds = list(range(1, C.NUM_ROUNDS + 1))
         avg_rev_by_round = []
         for r in rounds:
@@ -121,3 +128,4 @@ page_sequence = [
     Results,
     SessionSummary,
 ]
+
