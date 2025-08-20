@@ -1,0 +1,14 @@
+{{ block title }}Round results{{ endblock }}
+
+{{ block content }}
+<p>You {{ 'won' if i_won else 'lost' }} this round.</p>
+<ul>
+  <li>Your valuation: {{ my_val }}</li>
+  <li>Your bid: {{ my_bid }}</li>
+  <li>Opponent valuation: {{ opp_val }}</li>
+  <li>Opponent bid: {{ opp_bid }}</li>
+  <li>Transaction price: {{ price }}</li>
+  <li>Your payoff: <b>{{ my_payoff }}</b></li>
+</ul>
+{{ next_button }}
+{{ endblock }}
