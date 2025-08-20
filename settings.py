@@ -1,5 +1,7 @@
-import os
+# settings.py  (repo root)
 from os import environ
+
+SECRET_KEY = 'dev-key-change-me'              # <-- MUST exist
 
 SESSION_CONFIGS = [
     dict(
@@ -25,7 +27,3 @@ USE_POINTS = True
 
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD', 'otree')
-
-DEMO_PAGE_INTRO_HTML = '<p>Experiment 1: First-price sealed-bid auction with random matching.</p>'
-
-SECRET_KEY = 'dev-key-change-me'
