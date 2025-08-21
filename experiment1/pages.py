@@ -15,6 +15,7 @@ class Instructions(Page):
             matching=(s.config.get('matching') or 'random').lower(),
             tie_rule=(s.config.get('tie_rule') or 'random').lower(),
             ROUNDS=C.NUM_ROUNDS,
+            chat=bool(s.config.get('chat', False)),
         )
 
 
