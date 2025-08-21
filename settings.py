@@ -5,7 +5,7 @@ SECRET_KEY = 'dev-key-change-me'              # <-- MUST exist
 
 SESSION_CONFIGS = [
     dict(
-        name='exp1_first_price_random',
+        name='experiment1',
         display_name='Experiment 1: First-Price (random matching)',
         app_sequence=['experiment1'],
         num_demo_participants=2,
