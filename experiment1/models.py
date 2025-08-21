@@ -1,17 +1,17 @@
-from otree.api import *
-import random
+# experiment1/models.py
+from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer
+from otree.api import Currency as cu, models
 
-# Short alias for Currency
-cu = Currency  # (so we can write cu(0))
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
     NUM_ROUNDS = 10
-    # session.config may override these, but we keep sensible defaults:
+
+    # configurable rules (used by pages/templates)
     PRICE_RULE = 'first'     # 'first' or 'second'
-    MATCHING   = 'random'    # 'random' or 'fixed' (fixed = like round 1)
-    TIE_RULE   = 'random'    # 'random' or 'lowest_id'
+    MATCHING = 'random'      # 'random' or 'fixed'
+    TIE_RULE = 'random'      # 'random' or 'split' (only for second-price if you want)
 
 
 class Subsession(BaseSubsession):
@@ -19,77 +19,79 @@ class Subsession(BaseSubsession):
 
 
 class Group(BaseGroup):
-    price = CurrencyField(initial=cu(0))
-    winner_id_in_group = IntegerField(initial=0)
+    price = models.CurrencyField(initial=0)
+    winner_id_in_group = models.IntegerField(initial=0)
 
 
 class Player(BasePlayer):
-    valuation = CurrencyField()                 # set each round
-    bid       = CurrencyField(blank=True)       # may be blank if timeout
-    submitted = BooleanField(initial=False)
+    valuation = models.CurrencyField()
+    bid = models.CurrencyField(min=0, max=100, blank=True)
+    submitted = models.BooleanField(initial=True)
 
 
-# ----------- helpers -----------
-
-def _session_opt(session, key, default):
-    v = session.config.get(key)
-    return (v or default).lower() if isinstance(v, str) else (v if v is not None else default)
-
-
-# ----------- round setup -----------
+# ----- session helpers -----
 
 def creating_session(subsession: Subsession):
-    """Assign groups and valuations at the start of each round."""
-    s = subsession.session
+    """Assign groups + private valuations each round."""
+    import random
 
     # grouping
-    matching = _session_opt(s, 'matching', C.MATCHING)
-    if subsession.round_number == 1 or matching == 'random':
-        subsession.group_randomly()
+    if subsession.round_number == 1:
+        if C.MATCHING.lower() == 'fixed':
+            # fixed partner for all rounds
+            subsession.group_randomly()  # once in round 1, then copy below
+        else:
+            subsession.group_randomly()
     else:
-        subsession.group_like_round(1)
+        if C.MATCHING.lower() == 'fixed':
+            subsession.group_like_round(1)
+        else:
+            subsession.group_randomly()
 
-    # independent private values in [0, 100]
+    # assign valuations in every round
     for p in subsession.get_players():
-        # uniform(0,100) with cents; cast to Currency
+        # uniform 0–100 with 2 decimals
         p.valuation = cu(round(random.uniform(0, 100), 2))
 
 
-# ----------- payoff logic -----------
-
 def set_payoffs(group: Group):
-    """Robust against missing bids/valuations so the wait page can never crash."""
+    """Compute price & payoffs after both bids are in."""
+    import random
     p1, p2 = group.get_players()
+    b1, b2 = p1.bid, p2.bid
 
-    # Ensure valuations exist (paranoia guard)
-    for p in (p1, p2):
-        if p.valuation is None:
-            p.valuation = cu(0)
-        if p.bid is None:
-            # If player timed out, treat as a zero bid.
-            p.bid = cu(0)
+    # Treat missing bids as 0 (should not happen if you used timeout_submission)
+    b1 = cu(0) if b1 is None else b1
+    b2 = cu(0) if b2 is None else b2
 
-    # Determine winner (highest bid), with a tie rule
-    if p1.bid > p2.bid:
+    # nobody bid
+    if b1 == 0 and b2 == 0:
+        p1.payoff = cu(0)
+        p2.payoff = cu(0)
+        group.price = cu(0)
+        group.winner_id_in_group = 0
+        return
+
+    # determine winner (ties by rule)
+    if b1 > b2:
         winner, loser = p1, p2
-    elif p2.bid > p1.bid:
+    elif b2 > b1:
         winner, loser = p2, p1
     else:
-        tie_rule = _session_opt(group.session, 'tie_rule', C.TIE_RULE)
-        if tie_rule == 'lowest_id':
-            winner, loser = (p1, p2) if p1.id_in_group < p2.id_in_group else (p2, p1)
-        else:
-            winner, loser = random.choice([(p1, p2), (p2, p1)])
+        # tie: random winner
+        winner = random.choice([p1, p2])
+        loser = p1 if winner is p2 else p2
 
-    # Price rule
-    price_rule = _session_opt(group.session, 'price_rule', C.PRICE_RULE)
-    price = winner.bid if price_rule == 'first' else loser.bid
+    # price rule
+    if C.PRICE_RULE.lower() == 'second':
+        price = loser.bid
+    else:  # 'first'
+        price = winner.bid
 
-    # Record outcomes
     group.price = price
     group.winner_id_in_group = winner.id_in_group
 
-    # Payoffs
+    # payoffs (value - price if you win, 0 otherwise)
     winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
 
