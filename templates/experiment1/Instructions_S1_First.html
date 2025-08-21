@@ -1,0 +1,34 @@
+{% load otree static %}
+<section>
+  <h3>SESSION 1: FIRST-PRICE SEALED-BID AUCTION</h3>
+  <p>You will play {{ ROUNDS }} rounds in pairs. At the start of each round you are paired
+     <strong>randomly</strong> with another participant.</p>
+
+  <p>The seller auctions one indivisible item to two buyers. In each round you submit a sealed bid.</p>
+
+  <p>Each round your valuation and your opponent’s valuation are drawn independently and uniformly
+     from 0 to 100 (in cents). With probability 1/10,000 your valuation equals 0.01·n for n in 0…10,000.</p>
+
+  <p>After learning your valuation, you have <strong>1 minute</strong> to submit a bid. You won’t see your
+     opponent’s bid until the round ends, when you also learn whether you won and how many points you earned.</p>
+
+  <h4>Points in each round depend on</h4>
+  <ol>
+    <li>Your bid</li>
+    <li>Your opponent’s bid</li>
+    <li>Your valuation</li>
+  </ol>
+
+  <ul class="bullets">
+    <li>If your bid is lower than your opponent’s, you lose the auction and get 0 points.</li>
+    <li>If your bid is higher, you win the auction. In a <strong>first-price</strong> auction
+        your points are:
+        <div class="eq">
+          <img src="{% static 'img/first_eq.png' %}" alt="Your points = Your valuation − Your bid">
+        </div>
+    </li>
+    <li>If bid equalities are resolved randomly, the winner is chosen at random among tied high bids.</li>
+    <li>If you don’t submit a bid within 1 minute, you get 0 points.</li>
+  </ul>
+</section>
+<hr>
