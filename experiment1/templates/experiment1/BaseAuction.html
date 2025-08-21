@@ -4,15 +4,13 @@
 {% block title %}Experiment 1{% endblock %}
 
 {% block styles %}
-  <!-- File lives at experiment1/static/instructions.css -->
-  <link rel="stylesheet" href="{{ static('experiment1/instructions.css') }}">
+  <!-- use the absolute /static/ path; no helper needed -->
+  <link rel="stylesheet" href="/static/experiment1/instructions.css">
 {% endblock styles %}
 
 {% block content %}
   <h1 class="mb-3">Experiment 1</h1>
-
   {% block page_body %}{% endblock page_body %}
-
   <div class="mt-4">
     {% next_button %}
   </div>
