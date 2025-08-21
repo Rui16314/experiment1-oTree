@@ -1,8 +1,6 @@
 # settings.py  (repo root)
 from os import environ
 
-SECRET_KEY = 'dev-key-change-me'              # <-- MUST exist
-
 SESSION_CONFIGS = [
     dict(
         name='experiment1',
@@ -26,4 +24,12 @@ REAL_WORLD_CURRENCY_CODE = 'USD'
 USE_POINTS = True
 
 ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD', 'otree')
+# Set this in Heroku → Settings → Config Vars (OTREE_ADMIN_PASSWORD)
+ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD', 'otree')  # change/remove default in prod
+
+# Set this in Heroku as OTREE_SECRET_KEY; fallback is fine for local dev
+SECRET_KEY = environ.get('OTREE_SECRET_KEY', 'dev-key-change-me')
+
+# REQUIRED by oTree
+INSTALLED_APPS = ['otree']
+
