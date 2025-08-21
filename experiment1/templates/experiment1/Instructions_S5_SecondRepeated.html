@@ -1,9 +1,12 @@
-{% load otree static %}
-<section>
-  <h3>SESSION 5: REPEATED SECOND-PRICE</h3>
-  <p>Same as Session 4 but you keep the <strong>same opponent</strong> for all {{ ROUNDS }} rounds.</p>
-  <p>Second-price payoff:
-     <img class="eq" src="{% static 'img/second_eq.png' %}"
-          alt="Your points = Your valuation − Your opponent’s bid"></p>
-</section>
-<hr>
+{% extends "experiment1/BaseAuction.html" %}
+{% block title %}Instructions — Session 5 (Repeated Second-Price){% endblock %}
+{% block content %}
+  {% include "experiment1/Instructions_General.html" %}
+
+  <h3>SESSION 5: REPEATED SECOND-PRICE SEALED BID AUCTION</h3>
+  <p>You will be randomly paired once and remain with the <strong>same opponent for 10 rounds</strong>.</p>
+
+  <div class="formula">Your points = Your valuation − Your opponent’s bid</div>
+  <p class="small text-muted">If bids are equal: (Your valuation − Your opponent’s bid) / 2.</p>
+{% endblock %}
+
