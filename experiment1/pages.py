@@ -1,8 +1,5 @@
 from otree.api import *
-from .models import C, Player, Group, Subsession, set_payoffs
-
-# If you added the instructions.css and images in _static/, you can reference them
-# in your templates with {{ static('instructions.css') }} and {{ static('img/...') }}.
+from .models import C, Player, Group, Subsession, set_payoffs, cu
 
 
 def price_label(session):
@@ -25,10 +22,11 @@ class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
     timeout_seconds = 60
-    # If they time out, store bid=0 so we never get None at payoff time.
+    # If they time out, store a zero bid so payoff code never sees None.
     timeout_submission = {'bid': cu(0)}
 
     def vars_for_template(player: Player):
+        # Keep template simple; valuation is guaranteed non-None by creating_session
         return dict(valuation=player.valuation)
 
 
@@ -38,23 +36,16 @@ class ResultsWaitPage(WaitPage):
 
 class Results(Page):
     def vars_for_template(player: Player):
+        other = player.get_others_in_group()[0]
         group = player.group
-        opponent = player.get_others_in_group()[0]
-        winner = group.winner_id_in_group
-        you_won = (winner == player.id_in_group)
         return dict(
-            your_bid=player.bid,
-            opp_bid=opponent.bid,
-            valuation=player.valuation,
-            price=group.price,
-            you_won=you_won,
+            your_bid   = player.bid,
+            opp_bid    = other.bid,
+            valuation  = player.valuation,
+            price      = group.price,
+            you_won    = (group.winner_id_in_group == player.id_in_group),
         )
 
 
-page_sequence = [
-    Instructions,
-    Bid,
-    ResultsWaitPage,
-    Results,
-]
+page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
 
