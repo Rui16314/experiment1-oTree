@@ -1,0 +1,14 @@
+{% load otree static %}
+<section>
+  <h3>SESSION 4: SECOND-PRICE SEALED-BID AUCTION</h3>
+  <p>Pairs change randomly each round. Rules as in Session 1 except for the price rule.</p>
+  <p>Second-price payoff if you win:
+     <img class="eq" src="{% static 'img/second_eq.png' %}"
+          alt="Your points = Your valuation − Your opponent’s bid"></p>
+  <ul class="bullets">
+    <li>If your bid &lt; opponent’s, you get 0 points.</li>
+    <li>If your bid &gt; opponent’s, you win and pay the opponent’s bid.</li>
+    <li>Ties are resolved randomly unless otherwise stated.</li>
+  </ul>
+</section>
+<hr>
