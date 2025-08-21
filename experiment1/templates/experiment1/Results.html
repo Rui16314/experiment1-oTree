@@ -1,29 +1,18 @@
+{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
-{% block title %}Round results{% endblock %}
 
-{% block content %}
-  <h3>Round {{ subsession.round_number }} results</h3>
+{% block page_title %}Results{% endblock %}
 
-  <table class="table table-sm table-bordered w-auto">
-    <tr><th>Your valuation</th><td>{{ player.valuation }}</td></tr>
-    <tr><th>Your bid</th><td>{{ player.bid }}</td></tr>
-    {% if other %}
-      <tr><th>Opponent's bid</th><td>{{ other.bid }}</td></tr>
-    {% endif %}
-    <tr><th>Winning bid (price)</th><td>{{ group.price }}</td></tr>
-    <tr>
-      <th>Outcome</th>
-      <td>
-        {% if player.id_in_group == group.winner_id_in_group %}
-          You <strong>won</strong> the auction.
-        {% else %}
-          You <strong>lost</strong> the auction.
-        {% endif %}
-      </td>
-    </tr>
-    <tr><th>Your points this round</th><td>{{ player.payoff }}</td></tr>
-  </table>
+{% block page_body %}
+  <p><strong>Your bid:</strong> {{ your_bid }}</p>
+  <p><strong>Opponent's bid:</strong> {{ opp_bid }}</p>
+  <p><strong>Price paid:</strong> {{ price }}</p>
+  <p><strong>Your valuation:</strong> {{ valuation }}</p>
 
-  <p class="text-muted">Points add up over rounds.</p>
+  {% if you_won %}
+    <div class="alert alert-success">You won this round.</div>
+  {% else %}
+    <div class="alert alert-secondary">You did not win this round.</div>
+  {% endif %}
 {% endblock %}
 
