@@ -1,19 +1,29 @@
-{% load otree static %}
-{% extends "auction/BaseAuction.html" %}
+{% extends "experiment1/BaseAuction.html" %}
+{% block title %}Submit your bid{% endblock %}
 
-{% block page_title %}Submit your bid{% endblock %}
+{% block content %}
+  {% if view.has_timeout %}
+    <div class="alert alert-warning">Time left to complete this page: {{ view.remaining_timeout }}s</div>
+  {% endif %}
 
-{% block page_body %}
-  <div class="alert alert-warning">
-    Time left to complete this page: {{ page_remaining_seconds|default:60 }}s
-  </div>
+  <h3>Submit your bid</h3>
 
-  <p>Your valuation for this round is <strong>{{ valuation|floatformat:2 }}</strong>.</p>
+  <p>Your valuation for this round is <strong>{{ player.valuation }}</strong>.</p>
 
-  {% formfield player.bid with label="Bid" %}
-  <small class="text-muted">Enter a number between 0 and 100 (points).</small>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="row g-2 align-items-center" style="max-width: 360px;">
+      <div class="col">
+        {{ form.bid }}
+        {% if form.bid.errors %}
+          <div class="text-danger small">{{ form.bid.errors }}</div>
+        {% endif %}
+      </div>
+      <div class="col-auto">
+        <span class="input-group-text">points</span>
+      </div>
+    </div>
 
-  <div class="mt-3">
-    {% next_button %}
-  </div>
+    <button class="btn btn-primary mt-3">Next</button>
+  </form>
 {% endblock %}
