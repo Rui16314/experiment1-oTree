@@ -1,57 +1,42 @@
 # experiment1/pages.py
-from otree.api import *
-from .models import C, Subsession, Group, Player, set_payoffs
-
+from otree.api import Page, WaitPage
+from .models import C
 
 class Instructions(Page):
-    """Shown once at the start; exposes session config to the template."""
-    def is_displayed(self):
-        return self.round_number == 1
+    # Show once at the very beginning
+    def is_displayed(player):
+        return player.round_number == 1
 
-    def vars_for_template(self):
-        cfg = self.session.config
+    def vars_for_template(player):
+        cfg = player.session.config
+        price = cfg.get('price_rule', C.PRICE_RULE)
+        matching = cfg.get('matching', C.MATCHING)
         return dict(
-            price_rule=cfg.get('price_rule', getattr(C, 'PRICE_RULE', 'first')),
-            matching=cfg.get('matching', getattr(C, 'MATCHING', 'random')),
-            tie_rule=cfg.get('tie_rule', getattr(C, 'TIE_RULE', 'random')),
-            chat=bool(cfg.get('chat', False)),
-            num_rounds=C.NUM_ROUNDS,
-            # safe access; returns None if not yet set (does not raise)
-            valuation=self.player.field_maybe_none('valuation'),
+            price_rule_text='first-price (highest bid pays)' if price == 'first'
+            else 'second-price (winner pays the other bid)',
+            matching_text='random' if matching == 'random' else 'fixed',
         )
 
+# NEW: wait page that assigns valuations before Bid each round
+class RoundStart(WaitPage):
+    after_all_players_arrive = 'assign_valuations'
 
 class Bid(Page):
-    """Players submit a bid; we just return the field list (no peeking at
-    valuation here, to avoid 'None' access errors)."""
     form_model = 'player'
     form_fields = ['bid']
-    timeout_seconds = 60  # optional; change as you like
+    timeout_seconds = 60
 
-    def vars_for_template(self):
-        # Use safe accessor in templates just in case
-        return dict(valuation=self.player.field_maybe_none('valuation'))
-
+    def vars_for_template(player):
+        # valuation is guaranteed to be set by RoundStart
+        return dict(valuation=player.valuation)
 
 class ResultsWaitPage(WaitPage):
-    """Compute winner/price/payoffs after both bids are in."""
-    after_all_players_arrive = set_payoffs
-
+    after_all_players_arrive = 'set_payoffs'
 
 class Results(Page):
-    """Show round outcome."""
-    def vars_for_template(self):
-        g = self.group
-        me = self.player
-        opp = me.get_others_in_group()[0]
-        winner_id = g.winner_id_in_group
-        return dict(
-            you_won = (me.id_in_group == winner_id),
-            price   = g.price,
-            your_bid= me.bid,
-            opp_bid = opp.bid,
-            your_val= me.field_maybe_none('valuation'),
-        )
+    pass
+
+page_sequence = [Instructions, RoundStart, Bid, ResultsWaitPage, Results]
 
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
