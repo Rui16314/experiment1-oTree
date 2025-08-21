@@ -1,12 +1,16 @@
-{% load otree static %}
-<section>
-  <h3>SESSION 2: REPEATED FIRST-PRICE SEALED-BID AUCTION</h3>
-  <p>Same rules as Session 1, except you are paired at the start of the session and
-     remain paired with the <strong>same opponent for all {{ ROUNDS }} rounds</strong>.</p>
-  <p>Valuations are re-drawn each round as before.</p>
-  <h4>Points in each round</h4>
-  <ol><li>Your bid</li><li>Your opponent’s bid</li><li>Your valuation</li></ol>
-  <p>Payoff rule is the same first-price rule:
-     <img class="eq" src="{% static 'img/first_eq.png' %}" alt="Your points = Your valuation − Your bid"></p>
-</section>
-<hr>
+{% extends "experiment1/BaseAuction.html" %}
+{% block title %}Instructions — Session 2 (Repeated First-Price){% endblock %}
+{% block content %}
+  {% include "experiment1/Instructions_General.html" %}
+
+  <h3>SESSION 2: REPEATED FIRST-PRICE SEALED BID AUCTION</h3>
+  <p>You will be randomly paired <strong>once at the start</strong> and play against the
+     <strong>same opponent for all 10 rounds</strong>.</p>
+
+  <ul>
+    <li>Price rule: <strong>first-price</strong> (highest bid pays their own bid).</li>
+  </ul>
+
+  <h5>Payoff rule</h5>
+  <div class="formula">Your points = Your valuation − Your bid</div>
+{% endblock %}
