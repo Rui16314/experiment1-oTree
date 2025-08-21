@@ -1,20 +1,20 @@
 {% extends "global/Page.html" %}
-{% load otree static %}
+{% load otree %}
 
 {% block title %}Experiment 1{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'instructions.css' %}">
+  <!-- File lives at experiment1/static/instructions.css -->
+  <link rel="stylesheet" href="{{ static('experiment1/instructions.css') }}">
 {% endblock styles %}
 
-{# THIS BLOCK IS INSIDE THE oTree <form> #}
 {% block content %}
   <h1 class="mb-3">Experiment 1</h1>
 
-  {# Provide a nested block we can fill from child pages #}
   {% block page_body %}{% endblock page_body %}
 
   <div class="mt-4">
     {% next_button %}
   </div>
 {% endblock content %}
+
