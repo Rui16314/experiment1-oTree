@@ -1,22 +1,5 @@
-{% extends "experiment1/BaseAuction.html" %}
-{% block title %}Instructions — Session 4 (Second-Price){% endblock %}
-{% block content %}
-  {% include "experiment1/Instructions_General.html" %}
+<div class="note">
+  <h4>SESSION 4: SECOND-PRICE SEALED BID AUCTION</h4>
+  <p>Matching: <strong>random</strong>. Price rule: <strong>second-price</strong> (if you win, you pay the <em>opponent’s bid</em>).</p>
+</div>
 
-  <h3>SESSION 4: SECOND-PRICE SEALED BID AUCTION</h3>
-  <ul>
-    <li>Matching: <strong>random each round</strong>.</li>
-    <li>Price rule: <strong>second-price</strong> (winner pays the lower bid).</li>
-  </ul>
-
-  <h5>Payoff rule</h5>
-  <ul>
-    <li>If your bid &lt; opponent’s bid → you lose and receive 0.</li>
-    <li>If your bid &gt; opponent’s bid → you win and your points are:
-      <div class="formula">Your points = Your valuation − Your opponent’s bid</div>
-    </li>
-    <li>If the bids are equal → points:
-      <div class="formula">Your points = (Your valuation − Your opponent’s bid) / 2</div>
-    </li>
-  </ul>
-{% endblock %}
