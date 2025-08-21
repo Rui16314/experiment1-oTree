@@ -1,29 +1,16 @@
-{% extends "experiment1/BaseAuction.html" %}
-{% block title %}Submit your bid{% endblock %}
-
-{% block content %}
-  {% if view.has_timeout %}
-    <div class="alert alert-warning">Time left to complete this page: {{ view.remaining_timeout }}s</div>
-  {% endif %}
-
-  <h3>Submit your bid</h3>
-
-  <p>Your valuation for this round is <strong>{{ player.valuation }}</strong>.</p>
-
-  <form method="post" autocomplete="off">
-    {% csrf_token %}
-    <div class="row g-2 align-items-center" style="max-width: 360px;">
-      <div class="col">
-        {{ form.bid }}
-        {% if form.bid.errors %}
-          <div class="text-danger small">{{ form.bid.errors }}</div>
-        {% endif %}
-      </div>
-      <div class="col-auto">
-        <span class="input-group-text">points</span>
-      </div>
+{% load otree static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Experiment 1{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- oTree ships Bootstrap; you can style a bit more with the CSS below -->
+    <link rel="stylesheet" href="{% static 'instructions.css' %}">
+  </head>
+  <body class="o-body">
+    <div class="container my-4">
+      {% block content %}{% endblock %}
     </div>
-
-    <button class="btn btn-primary mt-3">Next</button>
-  </form>
-{% endblock %}
+  </body>
+</html>
