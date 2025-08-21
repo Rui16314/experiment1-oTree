@@ -1,0 +1,39 @@
+{% block title %}Instructions{% endblock %}
+
+{% block content %}
+
+<h2>GENERAL INSTRUCTIONS</h2>
+<p>Welcome to the ECON 3310 Experiment Platform.</p>
+<p>This experiment has two parts. Each part includes three separate sessions.
+In each session, you will complete 10 rounds (60 rounds total). Each round is
+expected to take about one minute. The whole experiment should take no more
+than 75 minutes including instructions.</p>
+<p>Participating in this experiment will earn you <b>100 POINTS</b>.
+You can earn extra points in each round; points from all rounds are added up,
+so every round matters.</p>
+
+<hr>
+
+<h3>SESSION 1: FIRST-PRICE SEALED BID AUCTION</h3>
+<p>You will play 10 rounds of this game. At the start of each round, you are
+paired with another participant (matching method: <b>{{ matching_text }}</b>).</p>
+<p>In each round there is an indivisible item. Both of you are interested in buying it.
+You privately receive a <b>valuation</b> for the item (0–100 points). Your
+opponent’s valuation is not revealed until the round ends.</p>
+
+<h4>How to play each round</h4>
+<ul>
+  <li>You have 60 seconds to submit a bid.</li>
+  <li><b>Price rule:</b> {{ price_rule_text }}.</li>
+  <li>If your bid is higher than your opponent’s, you win and your points are
+      <b>your valuation − the price you pay</b>.</li>
+  <li>If your bid is lower, you lose and earn 0 points.</li>
+  <li>If you don’t submit a bid in time, you earn 0 points.</li>
+</ul>
+
+<p>After each round, you see who won, both bids, both valuations, the price,
+and your points for the round.</p>
+
+{% next_button %}
+
+{% endblock %}
