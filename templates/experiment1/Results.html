@@ -1,14 +1,20 @@
-{{ block title }}Round results{{ endblock }}
+{% load otree static %}
+{% extends "auction/BaseAuction.html" %}
 
-{{ block content }}
-<p>You {{ 'won' if i_won else 'lost' }} this round.</p>
-<ul>
-  <li>Your valuation: {{ my_val }}</li>
-  <li>Your bid: {{ my_bid }}</li>
-  <li>Opponent valuation: {{ opp_val }}</li>
-  <li>Opponent bid: {{ opp_bid }}</li>
-  <li>Transaction price: {{ price }}</li>
-  <li>Your payoff: <b>{{ my_payoff }}</b></li>
-</ul>
-{{ next_button }}
-{{ endblock }}
+{% block page_title %}Round results{% endblock %}
+
+{% block page_body %}
+  <table class="table table-sm w-auto">
+    <tr><th>Your valuation</th><td>{{ valuation|floatformat:2 }}</td></tr>
+    <tr><th>Your bid</th><td>{{ your_bid|default_if_none:"(no bid)" }}</td></tr>
+    <tr><th>Opponent’s bid</th><td>{{ opp_bid|default_if_none:"(no bid)" }}</td></tr>
+    <tr><th>Price</th><td>{{ price }}</td></tr>
+    <tr><th>Outcome</th><td>{% if you_won %}You won{% else %}You lost{% endif %}</td></tr>
+    <tr><th>Your payoff</th><td>{{ player.payoff }}</td></tr>
+  </table>
+
+  <div class="mt-3">
+    {% next_button %}
+  </div>
+{% endblock %}
+
