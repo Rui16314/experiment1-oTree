@@ -1,12 +1,16 @@
 {% load otree static %}
-{% extends "global/Page.html" %}
-
-{% block global_styles %}
-<link rel="stylesheet" href="{% static 'instructions.css' %}">
-{% endblock %}
-
-{% block title %}{% block page_title %}{% endblock %}{% endblock %}
-
-{% block content %}
-  {% block page_body %}{% endblock %}
-{% endblock %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Experiment 1{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- oTree ships Bootstrap; you can style a bit more with the CSS below -->
+    <link rel="stylesheet" href="{% static 'instructions.css' %}">
+  </head>
+  <body class="o-body">
+    <div class="container my-4">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>
