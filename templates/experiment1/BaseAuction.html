@@ -1,0 +1,12 @@
+{% load otree static %}
+{% extends "global/Page.html" %}
+
+{% block global_styles %}
+<link rel="stylesheet" href="{% static 'instructions.css' %}">
+{% endblock %}
+
+{% block title %}{% block page_title %}{% endblock %}{% endblock %}
+
+{% block content %}
+  {% block page_body %}{% endblock %}
+{% endblock %}
