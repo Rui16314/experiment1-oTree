@@ -1,0 +1,96 @@
+/* ===== Instructions styling for oTree ===== */
+
+/* Layout */
+.instr-container{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 8px 12px 32px;
+  line-height: 1.6;
+  color: #1b1b1b;
+  font-size: 18px;
+}
+
+/* Headings */
+.instr-container h1{
+  font-size: 32px;
+  margin: 0 0 16px;
+  letter-spacing: .2px;
+}
+.instr-container h2{
+  font-size: 24px;
+  margin: 28px 0 10px;
+}
+.instr-container h3{
+  font-size: 20px;
+  margin: 22px 0 8px;
+}
+
+/* Lists */
+.instr-container ol,
+.instr-container ul{
+  padding-left: 26px;
+  margin: 8px 0 18px;
+}
+.instr-container li{ margin: 6px 0; }
+
+/* Emphasis helpers */
+.highlight{ background: #fff59d; padding: 0 .25em; }
+.muted{ color:#666; }
+.small{ font-size: .92em; }
+
+/* Note / callout blocks */
+.callout{
+  border-left: 5px solid #4f46e5;
+  background: #f5f7ff;
+  padding: 12px 14px;
+  margin: 18px 0;
+  border-radius: 6px;
+}
+.warning{
+  border-left: 5px solid #d9480f;
+  background: #fff4e6;
+}
+
+/* Equations and images */
+.eq{
+  display: block;
+  text-align: center;
+  margin: 16px auto;
+}
+.eq img{
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.06));
+}
+
+/* Horizontal rule used to separate sessions/parts */
+.instr-hr{
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ddd, transparent);
+  margin: 28px 0;
+}
+
+/* Table (if you use any) */
+.instr-table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 20px;
+  font-size: 16px;
+}
+.instr-table th, .instr-table td{
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+}
+.instr-table th{
+  background: #f8fafc;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Make it print friendly */
+@media print{
+  .instr-container{ color: #000; }
+  .callout, .warning{ border-left-color:#000; background:#fff; }
+  .highlight{ background:#ff0; }
+}
