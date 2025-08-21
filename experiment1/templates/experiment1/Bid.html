@@ -1,7 +1,12 @@
-{% block title %}Bid{% endblock %}
+{% block title %}Submit your bid{% endblock %}
+
 {% block content %}
-<h3>Round {{ player.round_number }}</h3>
-<p><b>Your valuation:</b> {{ valuation }}</p>
-{{ formfields }}
-{{ next_button }}
+  <div class="alert alert-warning">
+    Time left to complete this page: {{ timeout_seconds|default:60 }}s
+  </div>
+
+  <p>Your valuation for this round is <b>{{ valuation }}</b>.</p>
+
+  {{ formfields }}
+  {% next_button %}
 {% endblock %}
