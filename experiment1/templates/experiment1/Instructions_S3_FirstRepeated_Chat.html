@@ -1,10 +1,12 @@
-{% load otree static %}
-<section>
+{% extends "experiment1/BaseAuction.html" %}
+{% block title %}Instructions — Session 3 (Repeated First-Price with Chat){% endblock %}
+{% block content %}
+  {% include "experiment1/Instructions_General.html" %}
+
   <h3>SESSION 3: REPEATED FIRST-PRICE WITH COMMUNICATION</h3>
-  <p>Same as Session 2 (fixed partner for all {{ ROUNDS }} rounds) plus a chatbox:
-     <strong>you may communicate with your opponent before submitting your bid</strong>.
-     Discuss any matter you wish, but keep your identity confidential.</p>
-  <p>Valuations are re-drawn each round. First-price payoff:
-     <img class="eq" src="{% static 'img/first_eq.png' %}" alt="Your points = Your valuation − Your bid"></p>
-</section>
-<hr>
+  <p>Same as Session 2 (same opponent for 10 rounds), but now you may
+     <strong>chat with your opponent before submitting your bid</strong>.
+     Keep your identity confidential.</p>
+
+  <div class="formula">Your points = Your valuation − Your bid</div>
+{% endblock %}
