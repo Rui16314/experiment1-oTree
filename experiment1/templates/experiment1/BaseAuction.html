@@ -1,16 +1,14 @@
 {% load otree static %}
-{% extends "global/Page.html" %}
+
+{% block global_styles %}
+  <link rel="stylesheet" href="{% static 'instructions.css' %}">
+{% endblock %}
 
 {% block title %}Experiment 1{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
-{% endblock %}
 
 {% block content %}
   <div class="instr-container">
     {% block page_body %}{% endblock %}
-    <div class="mt-4">{% next_button %}</div>
   </div>
 {% endblock %}
 
