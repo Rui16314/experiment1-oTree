@@ -1,20 +1,19 @@
 {% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
-{% block page_title %}Submit your bid{% endblock %}
+{% block title %}Submit your bid{% endblock %}
 
 {% block page_body %}
   {% if timeout_seconds %}
     <div class="alert alert-warning">
-      Time left to complete this page: {{ timeout_seconds_display }}
+      Time left to complete this page: <span class="otree-timer"></span>
     </div>
   {% endif %}
 
-  <p>Your valuation for this round is <strong>{{ valuation }}</strong>.</p>
+  <p>Your valuation for this round is <strong>{{ valuation }}</strong> points.</p>
 
-  <form method="post">
-    {% formfield player.bid with label="Bid" %}
-    <button class="btn btn-primary" type="submit">Next</button>
-  </form>
+  {% formfield player.bid label="Bid" %}
+
+  {% next_button %}
 {% endblock %}
 
