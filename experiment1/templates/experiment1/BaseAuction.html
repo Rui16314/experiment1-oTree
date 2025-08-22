@@ -1,20 +1,15 @@
-{% extends "global/Page.html" %}
-{% load otree %}
+{% load otree static %}
+
+{% block global_styles  %}
+  <link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
+{% endblock %}
 
 {% block title %}Experiment 1{% endblock %}
 
-{% block styles %}
-  <!-- Link the stylesheet ONCE in the base so all pages get it -->
-  <link rel="stylesheet" href="/static/experiment1/instructions.css">
-{% endblock styles %}
-
 {% block content %}
   <div class="instr-container">
-    {% block page_body %}{% endblock page_body %}
+    {% block page_body %}{% endblock %}
   </div>
+{% endblock %}
 
-  <div class="mt-4">
-    {% next_button %}
-  </div>
-{% endblock content %}
 
