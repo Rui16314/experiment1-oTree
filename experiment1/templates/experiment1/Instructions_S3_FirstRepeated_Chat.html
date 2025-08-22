@@ -1,5 +1,26 @@
-<div class="note">
-  <h4>SESSION 3: REPEATED FIRST-PRICE WITH COMMUNICATION</h4>
-  <p>Same as Session 2, and you may communicate with your opponent before submitting bids.
-     Please keep your identity confidential.</p>
+{# templates/experiment1/Instructions_S3_FirstRepeated_Chat.html
+   Session 3: Repeated First-Price with communication #}
+
+<h3>SESSION 3: REPEATED FIRST-PRICE WITH COMMUNICATION</h3>
+
+<div class="callout">
+  <p>
+    Same as Session 2: you are paired with the
+    <strong>same opponent for all {{ ROUNDS }}</strong> rounds.
+  </p>
+  <p>
+    New in this session: you may <strong>chat</strong> with your opponent
+    before submitting your bid. Keep your identity confidential and keep messages on-topic.
+  </p>
 </div>
+
+<ul>
+  <li><strong>Matching:</strong> <em>fixed</em> — same opponent each round.</li>
+  <li><strong>Communication:</strong> chat available before bidding in every round.</li>
+  <li><strong>Price rule:</strong> <em>first-price</em> — if you win, you pay your own bid.</li>
+  <li><strong>Time limit:</strong> you have 1 minute to submit a bid each round.</li>
+  <li><strong>Payoff if you win:</strong> your valuation − your bid; otherwise 0.</li>
+  <li><strong>Ties:</strong> broken at random unless configured otherwise.</li>
+</ul>
+
+<hr class="instr-hr">
