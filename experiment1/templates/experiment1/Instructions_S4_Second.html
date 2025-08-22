@@ -1,5 +1,22 @@
-<div class="note">
-  <h4>SESSION 4: SECOND-PRICE SEALED BID AUCTION</h4>
-  <p>Matching: <strong>random</strong>. Price rule: <strong>second-price</strong> (if you win, you pay the <em>opponent’s bid</em>).</p>
+{# templates/experiment1/Instructions_S4_Second.html
+   Session 4: Second-Price, random matching, no chat #}
+
+<h3>SESSION 4: SECOND-PRICE SEALED-BID AUCTION</h3>
+
+<div class="callout">
+  <p>
+    You will play <strong>{{ ROUNDS }}</strong> rounds. In each round you are
+    <strong>randomly paired</strong> with a different participant.
+  </p>
 </div>
+
+<ul>
+  <li><strong>Price rule:</strong> <em>second-price</em> — if you win, you pay your opponent’s bid.</li>
+  <li><strong>Matching:</strong> <em>random</em> — your opponent changes each round.</li>
+  <li><strong>Time limit:</strong> you have 1 minute to submit a bid.</li>
+  <li><strong>Payoff if you win:</strong> your valuation − opponent’s bid; if you lose: 0.</li>
+  <li><strong>Ties:</strong> broken at random unless configured otherwise.</li>
+</ul>
+
+<hr class="instr-hr">
 
