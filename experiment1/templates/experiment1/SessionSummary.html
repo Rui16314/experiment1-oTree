@@ -1,37 +1,29 @@
-{% load otree static %}
+{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
-{% block page_title %}Session summary{% endblock %}
+{% block title %}Session summary{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{{ static('instructions.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="note">
+{% block page_body %}
+<div class="callout">
   <h3>Data to present</h3>
   <p>Below are the charts computed from this session.</p>
 </div>
 
 <h4>1) Average bid by valuation (all players)</h4>
 <canvas id="avgByBucket" height="120"></canvas>
-<p class="text-muted small">
-  • Example: mean bid at valuation 50 = <b>{{ avg_at_50 }}</b><br>
-  • Example: mean bid when valuation in [30, 39] = <b>{{ avg_30_39 }}</b>
+<p class="small muted mt-1">
+  • Mean bid at valuation 50 = <b>{{ avg_at_50 }}</b><br>
+  • Mean bid when valuation in [30, 39] = <b>{{ avg_30_39 }}</b>
 </p>
 
 <h4 class="mt-4">2) Individual students: bid vs. valuation</h4>
-<div id="perStudentCharts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+<div id="perStudentCharts"></div>
 
 <h4 class="mt-4">3) Average revenue (winning price) by round</h4>
 <canvas id="revByRound" height="120"></canvas>
 
 <h5 class="mt-2">4) Average revenue across all rounds</h5>
 <p><b>{{ rev_overall }}</b></p>
-
-<div class="mt-4">
-  {% next_button %}
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -47,40 +39,34 @@ new Chart(document.getElementById('avgByBucket'), {
   type: 'line',
   data: {
     labels: bucketX.map(x => `${x}–${x+9}`),
-    datasets: [{
-      label: 'Average bid',
-      data: bucketY,
-      spanGaps: true,
-      tension: 0.25
-    }]
+    datasets: [{ label: 'Average bid', data: bucketY, spanGaps: true, tension: 0.25 }]
   },
-  options: {
-    scales: {
-      y: { title: { display: true, text: 'Average bid' } },
-      x: { title: { display: true, text: 'Valuation bucket' } }
-    }
-  }
+  options: { scales: { y: { title: { display: true, text: 'Average bid' } },
+                       x: { title: { display: true, text: 'Valuation bucket' } } } }
 });
 
 // 2) One chart per student
 const container = document.getElementById('perStudentCharts');
-perPlayer.forEach((s, idx) => {
+perPlayer.forEach(s => {
   const wrap = document.createElement('div');
+  wrap.style.marginBottom = '16px';
+  const title = document.createElement('div');
+  title.textContent = `Student ${s.label}`;
+  title.style.fontWeight = '600';
+  title.style.margin = '6px 0';
   const canvas = document.createElement('canvas');
   canvas.height = 120;
+  wrap.appendChild(title);
   wrap.appendChild(canvas);
   container.appendChild(wrap);
 
   new Chart(canvas, {
     type: 'scatter',
-    data: {
-      datasets: [{
-        label: `Student ${s.label}`,
-        data: s.xs.map((x, i) => ({x, y: s.ys[i]})),
-        showLine: true,
-        tension: 0.25
-      }]
-    },
+    data: { datasets: [{
+      label: 'Bid vs. valuation',
+      data: s.xs.map((x, i) => ({x, y: s.ys[i]})),
+      showLine: true, tension: 0.25
+    }]},
     options: {
       parsing: false,
       scales: {
@@ -94,15 +80,10 @@ perPlayer.forEach((s, idx) => {
 // 3) Average revenue by round
 new Chart(document.getElementById('revByRound'), {
   type: 'bar',
-  data: {
-    labels: revByRound.map((_, i) => `Round ${i+1}`),
-    datasets: [{ label: 'Avg winning price', data: revByRound }]
-  },
-  options: {
-    scales: {
-      y: { title: { display: true, text: 'Price' } }
-    }
-  }
+  data: { labels: revByRound.map((_, i) => `Round ${i+1}`),
+          datasets: [{ label: 'Avg winning price', data: revByRound }] },
+  options: { scales: { y: { title: { display: true, text: 'Price' } } } }
 });
 </script>
 {% endblock %}
+
