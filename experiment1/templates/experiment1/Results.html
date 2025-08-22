@@ -1,7 +1,7 @@
 {% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
-{% block page_title %}Results{% endblock %}
+{% block title %}Results{% endblock %}
 
 {% block page_body %}
   <p><strong>Your bid:</strong> {{ your_bid }}</p>
@@ -15,4 +15,3 @@
     <div class="alert alert-secondary">You did not win this round.</div>
   {% endif %}
 {% endblock %}
-
