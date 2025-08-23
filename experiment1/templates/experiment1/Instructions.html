@@ -4,8 +4,26 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
+  {# common top section #}
   {% include "experiment1/Instructions_General.html" %}
-  {% include instruction_tmpl %}
-{% endblock %}
 
+  {# session-specific section #}
+  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
+    {% include "experiment1/Instructions_S1_First.html" %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
+    {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
+    {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
+  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
+    {% include "experiment1/Instructions_S4_Second.html" %}
+  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
+    {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
+  {% else %}
+    {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
+  {% endif %}
+
+  <div class="mt-4">
+    {% next_button %}
+  </div>
+{% endblock %}
 
