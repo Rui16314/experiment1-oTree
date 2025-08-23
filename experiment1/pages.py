@@ -1,82 +1,105 @@
-# experiment1/pages.py
+# experiment1/models.py
 from otree.api import *
-from .models import (
-    C, Player, Group, Subsession,
-    set_payoffs, rules_for_round, phase_and_round_in_session, draw_valuation
-)
-
-def price_label_for_round(round_number: int) -> str:
-    """Return 'first-price' or 'second-price' for this round."""
-    return 'first-price' if rules_for_round(round_number)['price'] == 'first' else 'second-price'
+from random import randint, choice
 
 
-class Instructions(Page):
+class C(BaseConstants):
+    NAME_IN_URL = 'experiment1'
+    PLAYERS_PER_GROUP = 2
+    # 6 sessions × 10 rounds
+    NUM_ROUNDS = 60
+
+
+class Subsession(BaseSubsession):
+    pass
+
+
+class Group(BaseGroup):
+    price = models.CurrencyField(initial=cu(0))
+    winner_id_in_group = models.IntegerField(initial=0)
+
+
+class Player(BasePlayer):
+    # NOTE: we do NOT allow nulls here; we always set it in creating_session
+    valuation = models.CurrencyField()
+    bid = models.CurrencyField(min=0, max=100, blank=True)
+
+
+# ---------- helpers about session/round and rules ----------
+
+def phase_and_round_in_session(rn: int):
+    """returns (session_no 1..6, round_in_session 1..10)"""
+    session_no = (rn - 1) // 10 + 1
+    round_in_session = (rn - 1) % 10 + 1
+    return session_no, round_in_session
+
+
+def rules_for_round(rn: int):
     """
-    Show instructions at the start of EACH 10-round session block
-    (i.e., rounds 1, 11, 21, 31, 41, 51).
+    Rules per session:
+      1: first-price,  random
+      2: first-price,  fixed
+      3: first-price,  fixed + chat
+      4: second-price, random
+      5: second-price, fixed
+      6: second-price, fixed + chat
     """
-    def is_displayed(self):
-        _, round_in_session = phase_and_round_in_session(self.round_number)
-        return round_in_session == 1
-
-    def vars_for_template(self):
-        s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        r = rules_for_round(self.round_number)
-        return dict(
-            # for your instruction partials
-            ROUNDS=10,
-            ROUNDS_PER_SESSION=10,                             # rounds per session (fixed)
-            session_no=s_no,                         # 1..6
-            round_in_session=r_in_s,                 # 1..10
-            price_rule=price_label_for_round(self.round_number),
-            matching=r['matching'],                  # 'random' or 'fixed'
-            tie_rule='random',                       # keep simple unless you add options
-            chat=r['chat'],                          # True/False
-        )
+    s, _ = phase_and_round_in_session(rn)
+    price = 'first' if s <= 3 else 'second'
+    matching = 'random' if s in (1, 4) else 'fixed'
+    chat = s in (3, 6)
+    return dict(price=price, matching=matching, chat=chat)
 
 
-class Bid(Page):
-    form_model = 'player'
-    form_fields = ['bid']
-    timeout_seconds = 60
-    timeout_submission = {'bid': cu(0)}
-
-    # ensure valuation is never None when the template renders
-    def _ensure_valuation(self):
-        if self.player.valuation is None:
-            self.player.valuation = draw_valuation()
-        return self.player.valuation
-
-    def vars_for_template(self):
-        s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        return dict(
-            valuation=self._ensure_valuation(),
-            session_no=s_no,
-            round_in_session=r_in_s,
-            ROUNDS_PER_SESSION=10,
-            ROUNDS=10,
-        )
+def draw_valuation():
+    # uniform 0–100 (two decimals)
+    return cu(randint(0, 10000)) / 100
 
 
+# ---------- oTree hooks ----------
 
-class ResultsWaitPage(WaitPage):
-    after_all_players_arrive = set_payoffs
+def creating_session(subsession: Subsession):
+    """Group players & draw valuations each round."""
+    s, ris = phase_and_round_in_session(subsession.round_number)
+    r = rules_for_round(subsession.round_number)
+
+    if r['matching'] == 'random':
+        subsession.group_randomly()
+    else:
+        # fixed partner within the 10-round session block
+        base_round = (s - 1) * 10 + 1
+        if ris == 1:
+            subsession.group_randomly()          # choose pairs at start of the session
+        else:
+            subsession.group_like_round(base_round)
+
+    # ALWAYS set valuation for every player, every round
+    for p in subsession.get_players():
+        p.valuation = draw_valuation()
 
 
-class Results(Page):
-    def vars_for_template(self):
-        opp = self.player.get_others_in_group()[0]
-        s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        return dict(
-            your_bid=self.player.bid,
-            opp_bid=opp.bid,
-            valuation=self.player.valuation,
-            price=self.group.price,
-            you_won=(self.group.winner_id_in_group == self.player.id_in_group),
-            session_no=s_no,
-            round_in_session=r_in_s,
-        )
+def set_payoffs(group: Group):
+    """Price & payoffs after both bids are in."""
+    p1, p2 = group.get_players()
+    # Treat missing bids as 0 thanks to timeout_submission, but guard anyway
+    b1 = p1.bid if p1.bid is not None else cu(0)
+    b2 = p2.bid if p2.bid is not None else cu(0)
 
+    # winner/loser (break ties at random)
+    if b1 > b2:
+        winner, loser = p1, p2
+    elif b2 > b1:
+        winner, loser = p2, p1
+    else:
+        winner = choice([p1, p2])
+        loser = p1 if winner is p2 else p2
 
-page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
+    price_rule = rules_for_round(group.round_number)['price']
+    price = loser.bid if price_rule == 'second' else winner.bid
+
+    group.price = price
+    group.winner_id_in_group = winner.id_in_group
+
+    winner.payoff = max(cu(0), winner.valuation - price)
+    loser.payoff = cu(0)
 
