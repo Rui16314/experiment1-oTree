@@ -2,8 +2,10 @@
 from otree.api import *
 from .models import C, Player, Group, Subsession, set_payoffs, draw_valuation
 
+
 class Instructions(Page):
     def vars_for_template(self):
+        # keep these simple for now; change later if you parameterize sessions
         return dict(
             price_rule='first-price',
             matching='random',
@@ -12,6 +14,7 @@ class Instructions(Page):
             ROUNDS=C.NUM_ROUNDS,
         )
 
+
 class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
@@ -19,12 +22,18 @@ class Bid(Page):
     timeout_submission = {'bid': cu(0)}
 
     def vars_for_template(self):
-        if self.player.valuation is None:
-            self.player.valuation = draw_valuation()
-        return dict(valuation=self.player.valuation)
+        # SAFE read that doesn't crash if the field is None
+        val = self.player.field_maybe_none('valuation')
+        if val is None:
+            # defensive fallback in case creating_session didn't run
+            val = draw_valuation()
+            self.player.valuation = val
+        return dict(valuation=val)
+
 
 class ResultsWaitPage(WaitPage):
     after_all_players_arrive = set_payoffs
+
 
 class Results(Page):
     def vars_for_template(self):
@@ -38,5 +47,7 @@ class Results(Page):
             you_won=you_won,
         )
 
+
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
+
 
