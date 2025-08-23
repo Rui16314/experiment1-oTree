@@ -1,6 +1,7 @@
 # experiment1/models.py
 from otree.api import *
 from random import randint, choice
+from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, Currency as cu, models
 
 
 class C(BaseConstants):
