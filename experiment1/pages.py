@@ -24,7 +24,7 @@ class Instructions(Page):
         r = rules_for_round(self.round_number)
         return dict(
             # for your instruction partials
-            ROUNDS=10,                               # rounds per session (fixed)
+            ROUNDS_PER_SESSION=10,                             # rounds per session (fixed)
             session_no=s_no,                         # 1..6
             round_in_session=r_in_s,                 # 1..10
             price_rule=price_label_for_round(self.round_number),
@@ -40,21 +40,21 @@ class Bid(Page):
     timeout_seconds = 60
     timeout_submission = {'bid': cu(0)}
 
-    def vars_for_template(self):
-        # SAFETY: if for any reason valuation didn't get set, create one here.
+    # ensure valuation is never None when the template renders
+    def _ensure_valuation(self):
         if self.player.valuation is None:
             self.player.valuation = draw_valuation()
+        return self.player.valuation
 
+    def vars_for_template(self):
         s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        # If your Bid.html still checks `{% if timeout_seconds %}` add it explicitly:
-        timeout = self.get_timeout_seconds()
-
         return dict(
-            valuation=self.player.valuation,
+            valuation=self._ensure_valuation(),
             session_no=s_no,
             round_in_session=r_in_s,
-            timeout_seconds=timeout,
+            ROUNDS_PER_SESSION=10,
         )
+
 
 
 class ResultsWaitPage(WaitPage):
