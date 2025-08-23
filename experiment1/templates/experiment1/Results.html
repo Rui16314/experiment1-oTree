@@ -1,7 +1,8 @@
+{# templates/experiment1/Results.html #}
 {% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
-{% block title %}Results{% endblock %}
+{% block page_title %}Results{% endblock %}
 
 {% block page_body %}
   <p><strong>Your bid:</strong> {{ your_bid }}</p>
@@ -14,4 +15,8 @@
   {% else %}
     <div class="alert alert-secondary">You did not win this round.</div>
   {% endif %}
+
+  <div class="mt-4">
+    {% next_button %}
+  </div>
 {% endblock %}
