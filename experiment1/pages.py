@@ -1,17 +1,40 @@
 # experiment1/pages.py
 from otree.api import *
-from .models import C, Player, Group, Subsession, set_payoffs, draw_valuation
-
+from .models import C, set_payoffs, draw_valuation
 
 class Instructions(Page):
     def vars_for_template(self):
-        # keep these simple for now; change later if you parameterize sessions
+        # For now you hard-code these (or read from session.config)
+        price_rule = 'first-price'   # 'first-price' or 'second-price'
+        matching   = 'random'        # 'random' or 'fixed'
+        chat       = False
+
+        # choose the partial to include
+        if price_rule == 'first-price':
+            if matching == 'random' and not chat:
+                tmpl = "experiment1/Instructions_S1_First.html"
+            elif matching == 'fixed' and not chat:
+                tmpl = "experiment1/Instructions_S2_FirstRepeated.html"
+            elif matching == 'fixed' and chat:
+                tmpl = "experiment1/Instructions_S3_FirstRepeated_Chat.html"
+            else:
+                tmpl = "experiment1/Instructions_S1_First.html"
+        else:
+            if matching == 'random' and not chat:
+                tmpl = "experiment1/Instructions_S4_Second.html"
+            elif matching == 'fixed' and not chat:
+                tmpl = "experiment1/Instructions_S5_SecondRepeated.html"
+            elif matching == 'fixed' and chat:
+                tmpl = "experiment1/Instructions_S6_SecondRepeated_Chat.html"
+            else:
+                tmpl = "experiment1/Instructions_S4_Second.html"
+
         return dict(
-            price_rule='first-price',
-            matching='random',
-            tie_rule='random',
-            chat=False,
+            price_rule=price_rule,
+            matching=matching,
+            chat=chat,
             ROUNDS=C.NUM_ROUNDS,
+            instruction_tmpl=tmpl,
         )
 
 
