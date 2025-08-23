@@ -22,10 +22,13 @@ def draw_valuation():
     return cu(randint(0, 10000)) / 100  # 0–100 with cents
 
 def creating_session(subsession: Subsession):
-    # group randomly each round (or copy round 1 if you want fixed)
+    import random
+    # grouping (random each round for now)
     subsession.group_randomly()
+    # assign valuations 0–100 (cents)
     for p in subsession.get_players():
-        p.valuation = draw_valuation()
+        p.valuation = cu(round(random.uniform(0, 100), 2))
+
 
 def set_payoffs(group: Group):
     p1, p2 = group.get_players()
