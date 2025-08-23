@@ -4,7 +4,8 @@
 
 <div class="callout">
   <p>
-    You will play <strong>{{ ROUNDS }}</strong> rounds. At the start of each
+    You will play <strong>{{ ROUNDS|default:10 }}</strong>
+    round{{ ROUNDS|default:10|pluralize }}. At the start of each
     round you are <strong>randomly paired</strong> with a different participant.
   </p>
 </div>
