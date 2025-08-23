@@ -7,9 +7,10 @@
   <p>Your valuation for this round is <strong>{{ valuation }}</strong>.</p>
 
   <form method="post">
-    {% formfield player.bid with label="Bid" %}
-    <button class="btn btn-primary" type="submit">Next</button>
+    {% formfield player.bid label="Bid" %}
+    {% next_button %}
   </form>
 {% endblock %}
+
 
 
