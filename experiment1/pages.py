@@ -49,3 +49,4 @@ class Results(Page):
         )
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
+
