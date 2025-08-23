@@ -4,38 +4,22 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {# Common top section #}
+  {# common top section #}
   {% include "experiment1/Instructions_General.html" %}
 
-  {# --- Session-specific section with safe defaults --- #}
-  {% if (price_rule|default:'first-price') == 'first-price' and
-        (matching|default:'random') == 'random' and
-        not (chat|default:0) %}
-      {% include "experiment1/Instructions_S1_First.html" %}
-
-  {% elif (price_rule|default:'first-price') == 'first-price' and
-          (matching|default:'fixed') == 'fixed' and
-          not (chat|default:0) %}
-      {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-
-  {% elif (price_rule|default:'first-price') == 'first-price' and
-          (matching|default:'fixed') == 'fixed' and
-          (chat|default:0) %}
-      {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-
-  {% elif (price_rule|default:'first-price') != 'first-price' and
-          (matching|default:'random') == 'random' and
-          not (chat|default:0) %}
-      {% include "experiment1/Instructions_S4_Second.html" %}
-
-  {% elif (price_rule|default:'first-price') != 'first-price' and
-          (matching|default:'fixed') == 'fixed' and
-          not (chat|default:0) %}
-      {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-
+  {# session-specific section #}
+  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
+    {% include "experiment1/Instructions_S1_First.html" %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
+    {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
+    {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
+  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
+    {% include "experiment1/Instructions_S4_Second.html" %}
+  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
+    {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
   {% else %}
-      {# second-price + fixed + chat (or any leftover combo) #}
-      {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
+    {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
   {% endif %}
 
   <div class="mt-4">
