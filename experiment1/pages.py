@@ -24,6 +24,7 @@ class Instructions(Page):
         r = rules_for_round(self.round_number)
         return dict(
             # for your instruction partials
+            ROUNDS=10,
             ROUNDS_PER_SESSION=10,                             # rounds per session (fixed)
             session_no=s_no,                         # 1..6
             round_in_session=r_in_s,                 # 1..10
@@ -53,6 +54,7 @@ class Bid(Page):
             session_no=s_no,
             round_in_session=r_in_s,
             ROUNDS_PER_SESSION=10,
+            ROUNDS=10,
         )
 
 
