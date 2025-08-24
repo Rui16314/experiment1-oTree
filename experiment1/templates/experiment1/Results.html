@@ -1,12 +1,9 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
 {% block page_title %}Results{% endblock %}
 
 {% block page_body %}
-  <p class="muted small">
-    Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}
-  </p>
+  <p class="muted small">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
   <p><strong>Your bid:</strong> {{ your_bid }}</p>
   <p><strong>Opponent's bid:</strong> {{ opp_bid }}</p>
