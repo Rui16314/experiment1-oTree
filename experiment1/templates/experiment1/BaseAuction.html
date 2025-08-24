@@ -1,16 +1,13 @@
 {% load otree static %}
-{% extends "global/Page.html" %}
 
 {% block global_styles %}
   <link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
 {% endblock %}
 
-{# Optional page title from child templates #}
-{% block title %}{% block page_title %}Experiment 1{% endblock %}{% endblock %}
+{% block title %}{% block page_title %}Experiment{% endblock %}{% endblock %}
 
 {% block content %}
   <div class="instr-container">
     {% block page_body %}{% endblock %}
   </div>
 {% endblock %}
-
