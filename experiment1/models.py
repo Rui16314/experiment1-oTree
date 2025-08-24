@@ -1,7 +1,7 @@
-# experiment1/models.py
-from otree.api import *
-from random import randint, choice
+# preferred explicit style
 from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, models, Currency as cu
+from random import randint, choice
+
 
 
 class C(BaseConstants):
