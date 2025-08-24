@@ -43,14 +43,18 @@ class Results(Page):
     def vars_for_template(self):
         opp = self.player.get_others_in_group()[0]
         you_won = (self.group.winner_id_in_group == self.player.id_in_group)
+        s_no, r_in_s = phase_and_round_in_session(self.round_number)
         return dict(
-            **_common_context(self),
             your_bid=self.player.bid,
             opp_bid=opp.bid,
             valuation=self.player.valuation,
             price=self.group.price,
             you_won=you_won,
+            session_no=s_no,
+            round_in_session=r_in_s,
+            ROUNDS_PER_SESSION=10,
         )
+
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
 
