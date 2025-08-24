@@ -1,23 +1,23 @@
 {% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
-{% block page_title %}Results{% endblock %}
+{% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p><strong>Your bid:</strong> {{ your_bid }}</p>
-  <p><strong>Opponent's bid:</strong> {{ opp_bid }}</p>
-  <p><strong>Price paid:</strong> {{ price }}</p>
-  <p><strong>Your valuation:</strong> {{ valuation }}</p>
+  <p class="text-muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
-  {% if you_won %}
-    <div class="alert alert-success">You won this round.</div>
-  {% else %}
-    <div class="alert alert-secondary">You did not win this round.</div>
+  {% if timeout_seconds %}
+    <div class="alert alert-warning">
+      Time left to complete this page: {{ timeout_seconds_display }}
+    </div>
   {% endif %}
 
-  <div class="mt-4">
-    {% next_button %}
-  </div>
+  <p>Your valuation for this round is <strong>{{ valuation }}</strong>.</p>
+
+  <form method="post">
+    {% formfield player.bid label="Bid" %}
+    <button class="btn btn-primary" type="submit">Next</button>
+  </form>
 {% endblock %}
 
 
