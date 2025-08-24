@@ -1,12 +1,17 @@
+{# Session 1: first-price, random matching #}
 <h3>SESSION 1: FIRST-PRICE SEALED-BID AUCTION</h3>
+
 <div class="callout">
-  <p>You will play <strong>{{ ROUNDS_PER_SESSION }}</strong> rounds. Each round you are
-     <strong>randomly paired</strong> with a different participant.</p>
+  <p>
+    You will play <strong>{{ ROUNDS_PER_SESSION }}</strong> rounds. At the start of each
+    round you are <strong>randomly paired</strong> with a different participant.
+  </p>
 </div>
+
 <ul>
-  <li><strong>Price rule:</strong> first-price — if you win, you pay your own bid.</li>
-  <li><strong>Matching:</strong> random — opponent changes each round.</li>
-  <li><strong>Time limit:</strong> 1 minute to submit a bid.</li>
+  <li><strong>Price rule:</strong> <em>first-price</em> — if you win, you pay your own bid.</li>
+  <li><strong>Matching:</strong> <em>random</em> — your opponent changes each round.</li>
+  <li><strong>Time limit:</strong> you have 1 minute to submit a bid.</li>
   <li><strong>Payoff if you win:</strong> your valuation − your bid. If you lose: 0.</li>
-  <li><strong>Ties:</strong> broken at random unless session config specifies otherwise.</li>
+  <li><strong>Ties:</strong> broken at random.</li>
 </ul>
