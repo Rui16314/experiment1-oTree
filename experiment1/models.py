@@ -1,6 +1,6 @@
 # experiment1/models.py
 from otree.api import *
-from random import randint, choice
+import random
 
 
 class C(BaseConstants):
@@ -20,26 +20,23 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    # allow null until we set it (pages use field_maybe_none to read safely)
-    valuation = models.CurrencyField(blank=True)
+    # use integer points 0..100 to keep it simple & robust
+    valuation = models.CurrencyField()
     bid = models.CurrencyField(min=0, max=100, blank=True)
 
 
-# ---------------- helpers used by pages.py ----------------
+# ---------- helpers ----------
 
-def phase_and_round_in_session(round_number: int):
-    """Return (session_no 1..6, round_in_session 1..10) for a global round number."""
-    session_no = (round_number - 1) // 10 + 1
-    round_in_session = (round_number - 1) % 10 + 1
+def phase_and_round_in_session(rn: int):
+    """Return (session_no 1..6, round_in_session 1..10)."""
+    session_no = (rn - 1) // 10 + 1
+    round_in_session = (rn - 1) % 10 + 1
     return session_no, round_in_session
 
 
-def rules_for_round(round_number: int):
-    """
-    Sessions 1–3: first-price; 4–6: second-price.
-    Sessions 1 & 4: random matching; 2 & 5: fixed; 3 & 6: fixed + chat (chat is informational).
-    """
-    s, _ = phase_and_round_in_session(round_number)
+def rules_for_round(rn: int):
+    """Which rules apply in this round?"""
+    s, _ = phase_and_round_in_session(rn)
     price = 'first' if s <= 3 else 'second'
     matching = 'random' if s in (1, 4) else 'fixed'
     chat = s in (3, 6)
@@ -47,48 +44,45 @@ def rules_for_round(round_number: int):
 
 
 def draw_valuation():
-    # uniform 0–100 with 2 decimals
-    return cu(randint(0, 10000)) / 100
+    # robust: integer 0..100 (no float issues)
+    return cu(random.randint(0, 100))
 
 
-# ---------------- oTree hooks ----------------
+# ---------- oTree hooks ----------
 
 def creating_session(subsession: Subsession):
-    """
-    Group players and draw valuations for every round.
-    For fixed sessions, keep the same pairs within the 10-round block.
-    """
-    session_no, round_in_session = phase_and_round_in_session(subsession.round_number)
+    """Group players & draw valuations each round."""
+    s_no, r_in_s = phase_and_round_in_session(subsession.round_number)
     r = rules_for_round(subsession.round_number)
 
     if r['matching'] == 'random':
         subsession.group_randomly()
     else:
-        base_round = (session_no - 1) * 10 + 1
-        if round_in_session == 1:
-            subsession.group_randomly()          # pick pairs at the start of the session
+        # fixed partner within the 10-round session block
+        base_round = (s_no - 1) * 10 + 1
+        if r_in_s == 1:
+            subsession.group_randomly()          # choose pairs at start of session
         else:
             subsession.group_like_round(base_round)
 
     for p in subsession.get_players():
-        # set a fresh valuation each round
+        # ensure valuation exists every round
         p.valuation = draw_valuation()
 
 
 def set_payoffs(group: Group):
-    """Compute winner, price, and payoffs; ties broken at random."""
+    """Set winner, price, payoffs after both bids are in."""
     p1, p2 = group.get_players()
-
-    # Treat missing bids as 0 (timeout submission should set this anyway)
     b1 = p1.bid if p1.bid is not None else cu(0)
     b2 = p2.bid if p2.bid is not None else cu(0)
 
+    # determine winner (break ties at random)
     if b1 > b2:
         winner, loser = p1, p2
     elif b2 > b1:
         winner, loser = p2, p1
     else:
-        winner = choice([p1, p2])
+        winner = random.choice([p1, p2])
         loser = p1 if winner is p2 else p2
 
     price_rule = rules_for_round(group.round_number)['price']
@@ -99,4 +93,5 @@ def set_payoffs(group: Group):
 
     winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
+
 
