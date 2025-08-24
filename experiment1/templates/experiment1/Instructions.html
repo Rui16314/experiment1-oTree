@@ -4,26 +4,25 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {# general intro used in all sessions #}
+  {# 1) General goes first #}
   {% include "experiment1/Instructions_General.html" %}
 
-  {# show the right session-specific section based on session_no (1..6) #}
-  {% if session_no == 1 %}
+  {# 2) Session-specific piece exactly once #}
+  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
     {% include "experiment1/Instructions_S1_First.html" %}
-  {% elif session_no == 2 %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
     {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-  {% elif session_no == 3 %}
+  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
     {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-  {% elif session_no == 4 %}
+  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
     {% include "experiment1/Instructions_S4_Second.html" %}
-  {% elif session_no == 5 %}
+  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
     {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-  {% elif session_no == 6 %}
+  {% else %}
     {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
   {% endif %}
 
-  <div class="mt-4">
-    {% next_button %}
-  </div>
+  {# 3) Next button LAST #}
+  <div class="mt-4">{% next_button %}</div>
 {% endblock %}
 
