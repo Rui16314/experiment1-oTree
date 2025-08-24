@@ -30,6 +30,15 @@ ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD', 'otree')  # change/remove d
 # Set this in Heroku as OTREE_SECRET_KEY; fallback is fine for local dev
 SECRET_KEY = environ.get('OTREE_SECRET_KEY', 'dev-key-change-me')
 
-# REQUIRED by oTree
+# keep this exactly like this
 INSTALLED_APPS = ['otree']
+
+SESSION_CONFIGS = [
+    dict(
+        name='exp1_firstprice',
+        display_name='Experiment 1: First-Price (random matching)',
+        app_sequence=['experiment1'],   # include your app ONCE here
+        num_demo_participants=2,
+    ),
+]
 
