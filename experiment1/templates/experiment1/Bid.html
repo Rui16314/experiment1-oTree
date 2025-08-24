@@ -1,12 +1,9 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
 {% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p class="muted small">
-    Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}
-  </p>
+  <p class="muted small">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
   {% if timeout_seconds %}
     <div class="alert alert-warning">
