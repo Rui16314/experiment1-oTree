@@ -1,13 +1,10 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {# 1) General goes first #}
   {% include "experiment1/Instructions_General.html" %}
 
-  {# 2) Session-specific piece exactly once #}
   {% if price_rule == 'first-price' and matching == 'random' and not chat %}
     {% include "experiment1/Instructions_S1_First.html" %}
   {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
@@ -22,7 +19,6 @@
     {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
   {% endif %}
 
-  {# 3) Next button LAST #}
-  <div class="mt-4">{% next_button %}</div>
+  <div class="mt-3">{% next_button %}</div>
 {% endblock %}
 
