@@ -41,10 +41,14 @@ def rules_for_round(round_number: int):
     chat = s_no in (3, 6)
     return dict(price=price, matching=matching, chat=chat)
 
+from random import randint
+from otree.api import Currency as cu
+# (keep your other imports)
 
-def draw_valuation() -> currency:
-    # Uniform 0–100 (two decimals)
-    return cu(random.randint(0, 10000)) / 100
+def draw_valuation():
+    # uniform 0–100 with 2 decimals
+    return cu(randint(0, 10000)) / 100
+
 
 
 # ---------- oTree hooks ----------
