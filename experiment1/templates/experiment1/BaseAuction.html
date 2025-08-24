@@ -1,8 +1,9 @@
-{% load otree static %}
+{% load otree %}   {# no need to load 'static', oTree provides static() #}
 
 {% block global_styles %}
-<link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
+  <link rel="stylesheet" href="{{ static('experiment1/instructions.css') }}">
 {% endblock %}
+
 
 {% block title %}Experiment 1{% endblock %}
 
