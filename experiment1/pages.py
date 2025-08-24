@@ -9,7 +9,6 @@ from .models import (
 )
 
 def price_label_for_round(rn: int) -> str:
-    """Return the label expected by your templates: 'first-price' / 'second-price'."""
     return 'second-price' if rules_for_round(rn)['price'] == 'second' else 'first-price'
 
 
@@ -18,14 +17,13 @@ class Instructions(Page):
         s_no, r_in_s = phase_and_round_in_session(self.round_number)
         r = rules_for_round(self.round_number)
         return dict(
-            # used by session partials
             ROUNDS_PER_SESSION=10,
-            session_no=s_no,                  # 1..6
-            round_in_session=r_in_s,          # 1..10
+            session_no=s_no,
+            round_in_session=r_in_s,
             price_rule=price_label_for_round(self.round_number),
-            matching=r['matching'],           # 'random' or 'fixed'
+            matching=r['matching'],
             tie_rule='random',
-            chat=r['chat'],                   # True / False
+            chat=r['chat'],
         )
 
 
@@ -33,10 +31,9 @@ class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
     timeout_seconds = 60
-    timeout_submission = {'bid': cu(0)}  # cu imported via otree.api *
+    timeout_submission = {'bid': cu(0)}
 
     def _ensure_valuation(self):
-        # guard in case a valuation is missing for this player/round
         if self.player.valuation is None:
             self.player.valuation = draw_valuation()
         return self.player.valuation
@@ -52,7 +49,7 @@ class Bid(Page):
 
 
 class ResultsWaitPage(WaitPage):
-    after_all_players_arrive = set_payoffs   # function imported from models.py
+    after_all_players_arrive = set_payoffs
 
 
 class Results(Page):
