@@ -1,7 +1,10 @@
-# experiment1/models.py
 from otree.api import *
-from random import randint, choice
-from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, Currency as cu, models
+from .models import (
+    C, Subsession, Group, Player,
+    set_payoffs, rules_for_round,
+    phase_and_round_in_session, draw_valuation,
+)
+
 
 
 class C(BaseConstants):
