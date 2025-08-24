@@ -4,22 +4,26 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
+  {# general intro used in all sessions #}
   {% include "experiment1/Instructions_General.html" %}
 
-  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
+  {# show the right session-specific section based on session_no (1..6) #}
+  {% if session_no == 1 %}
     {% include "experiment1/Instructions_S1_First.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
+  {% elif session_no == 2 %}
     {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
+  {% elif session_no == 3 %}
     {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
+  {% elif session_no == 4 %}
     {% include "experiment1/Instructions_S4_Second.html" %}
-  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
+  {% elif session_no == 5 %}
     {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-  {% else %}
+  {% elif session_no == 6 %}
     {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
   {% endif %}
 
-  <div class="mt-4">{% next_button %}</div>
+  <div class="mt-4">
+    {% next_button %}
+  </div>
 {% endblock %}
 
