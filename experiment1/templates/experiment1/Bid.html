@@ -4,11 +4,14 @@
 {% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+  <p class="text-muted">Session {{ session_no }} — Round {{ round_in_session }} of 10</p>
 
-  <p>Your valuation for this round is <strong>{{ valuation }}</strong> points.</p>
+  <p>Your valuation for this round is <strong>{{ player.valuation }}</strong>.</p>
 
-  {% formfield player.bid label="Bid" %}
-  {% next_button %}
+  <form method="post">
+    {% formfield player.bid label="Bid" %}
+    <button class="btn btn-primary" type="submit">Next</button>
+  </form>
 {% endblock %}
+
 
