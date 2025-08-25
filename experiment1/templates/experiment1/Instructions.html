@@ -1,26 +1,22 @@
-{% load otree %}
+{% load otree static %}
 {% extends "experiment1/BaseAuction.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
+{% endblock %}
 
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {% include "experiment1/Instructions_General.html" %}
-
-  {# session-specific block #}
-  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
-    {% include "experiment1/Instructions_S1_First.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
-    {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
-    {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
-    {% include "experiment1/Instructions_S4_Second.html" %}
-  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
-    {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-  {% else %}
-    {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
+  {% if show_general %}
+    {% include "experiment1/Instructions_General.html" %}
   {% endif %}
 
-  <div class="mt-3">{% next_button %}</div>
+  {# Session-specific block: pulls one of the 6 files below #}
+  {% include include_name %}
+
+  <div class="mt-3">
+    {% next_button %}
+  </div>
 {% endblock %}
 
