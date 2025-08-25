@@ -4,23 +4,23 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {# Show the common general instructions ONCE #}
-  {% include "experiment1/Instructions_General.html" %}
+  <h3>Session {{ session_no }} — {{ price_rule|title }}</h3>
 
-  {# Session-specific block #}
-  {% if price_rule == 'first-price' and matching == 'random' and not chat %}
-    {% include "experiment1/Instructions_S1_First.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
-    {% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-  {% elif price_rule == 'first-price' and matching == 'fixed' and chat %}
-    {% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-  {% elif price_rule != 'first-price' and matching == 'random' and not chat %}
-    {% include "experiment1/Instructions_S4_Second.html" %}
-  {% elif price_rule != 'first-price' and matching == 'fixed' and not chat %}
-    {% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-  {% else %}
-    {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
-  {% endif %}
+  <div class="note">
+    <p>You will play <b>{{ ROUNDS_PER_SESSION }}</b> rounds in this session.</p>
+    <ul>
+      <li><b>Matching:</b> {{ matching }}{% if matching == 'fixed' %} (same opponent all {{ ROUNDS_PER_SESSION }} rounds){% else %} (opponent changes each round){% endif %}.</li>
+      <li><b>Time limit:</b> 1 minute to submit your bid.</li>
+      <li><b>If you do not bid:</b> the system submits an automatic bid:
+        <b>v/2</b> in first-price; <b>v</b> in second-price. If that automatic bid is the highest, <b>both players receive 0 payoff</b>.</li>
+      <li><b>Payoff if you win:</b> valuation − price; otherwise 0.</li>
+      {% if chat %}<li><b>Communication:</b> You may chat with your opponent before bidding.</li>{% endif %}
+    </ul>
+  </div>
+
+  <div class="mt-4">{% next_button %}</div>
+{% endblock %}
+
 
   <div class="mt-4">
     {% next_button %}
