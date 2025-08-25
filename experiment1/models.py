@@ -42,7 +42,7 @@ def rules_for_round(rn: int):
     return dict(price=price, matching=matching, chat=chat)
 
 
-def draw_valuation() -> Currency:
+def draw_valuation():
     # uniform over 0..100 with 2 decimals
     return cu(randint(0, 10000)) / 100
 
