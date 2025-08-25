@@ -27,8 +27,8 @@ class Player(BasePlayer):
 
 # ---------------- helpers ----------------
 
-def draw_valuation() -> currency:
-    # uniform 0–100 with two decimals
+def draw_valuation():
+    """Uniform 0–100 with two decimals."""
     return cu(randint(0, 10000)) / 100
 
 
