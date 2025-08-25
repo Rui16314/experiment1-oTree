@@ -1,16 +1,28 @@
 # experiment1/models.py
 from otree.api import *
-import random
+from random import choice
 
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
 
-    # 6 sessions x 10 rounds
+    # 6 sessions, 10 rounds each
+    SESSIONS = 6
     ROUNDS_PER_SESSION = 10
-    NUM_SESSIONS = 6
-    NUM_ROUNDS = ROUNDS_PER_SESSION * NUM_SESSIONS
+    NUM_ROUNDS = SESSIONS * ROUNDS_PER_SESSION
+
+    # convenience mapping: session 1..6 -> (price_rule, matching, chat)
+    # sessions 1–3: first-price; 4–6: second-price
+    # sessions 2 & 5: fixed partners; 3 & 6: with chat
+    SESSION_RULES = {
+        1: dict(price='first',  matching='random', chat=False),
+        2: dict(price='first',  matching='fixed',  chat=False),
+        3: dict(price='first',  matching='fixed',  chat=True),
+        4: dict(price='second', matching='random', chat=False),
+        5: dict(price='second', matching='fixed',  chat=False),
+        6: dict(price='second', matching='fixed',  chat=True),
+    }
 
 
 class Subsession(BaseSubsession):
@@ -23,93 +35,97 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    valuation = models.CurrencyField(min=0, max=100)
+    valuation = models.CurrencyField()
     bid = models.CurrencyField(min=0, max=100, blank=True)
-    auto_bid_used = models.BooleanField(initial=False)
+    timed_out = models.BooleanField(initial=False)  # True if system set v/2
 
 
 # ---------- helpers ----------
 
-def session_and_round(rn: int):
-    """Return (session_no 1..6, round_in_session 1..10) for absolute round rn."""
-    s = (rn - 1) // C.ROUNDS_PER_SESSION + 1
-    r = (rn - 1) % C.ROUNDS_PER_SESSION + 1
-    return s, r
+def session_no_and_round_in_session(round_number: int):
+    """Return (session_no: 1..6, round_in_session: 1..10)."""
+    s_no = (round_number - 1) // C.ROUNDS_PER_SESSION + 1
+    r_in = (round_number - 1) % C.ROUNDS_PER_SESSION + 1
+    return s_no, r_in
 
 
-def rules_for_round(rn: int):
-    """What rules apply in this round?"""
-    s, _ = session_and_round(rn)
-    price = 'first' if s <= 3 else 'second'
-    matching = 'random' if s in (1, 4) else 'fixed'
-    chat = s in (3, 6)
-    return dict(price=price, matching=matching, chat=chat)
+def rules_for_round(round_number: int):
+    s_no, _ = session_no_and_round_in_session(round_number)
+    return C.SESSION_RULES[s_no]
 
 
 def draw_valuation() -> currency:
-    # uniform in cents, 0.00 .. 100.00
-    return cu(random.randint(0, 10000)) / 100
+    # uniform 0–100 in cents (two decimals)
+    # (this matches the “0..100 in cents” rule in your doc)
+    return cu(self_random.randint(0, 10000)) / 100
 
 
 # ---------- oTree hooks ----------
 
 def creating_session(subsession: Subsession):
-    """Group players & draw valuations each round."""
-    s, r = session_and_round(subsession.round_number)
-    rules = rules_for_round(subsession.round_number)
+    """Group players & draw valuations each round according to session rules."""
+    s_no, r_in = session_no_and_round_in_session(subsession.round_number)
+    r = rules_for_round(subsession.round_number)
 
-    if rules['matching'] == 'random':
+    if r['matching'] == 'random':
         subsession.group_randomly()
     else:
-        # fixed partner within each 10-round block
-        base_round = (s - 1) * C.ROUNDS_PER_SESSION + 1
-        if r == 1:
-            subsession.group_randomly()
+        # fixed partner within each 10-round session block
+        base_round = (s_no - 1) * C.ROUNDS_PER_SESSION + 1
+        if r_in == 1:
+            subsession.group_randomly()          # choose pairs at start of session
         else:
             subsession.group_like_round(base_round)
 
     for p in subsession.get_players():
-        p.valuation = draw_valuation()
+        # fresh valuation every round
+        p.valuation = cu(self_random.randint(0, 10000)) / 100
 
 
 def set_payoffs(group: Group):
-    """Compute price & payoffs after both bids are in, including auto-bid rules."""
-    rules = rules_for_round(group.round_number)
-    first_price = (rules['price'] == 'first')
-
+    """Implements first/second price, ties random, and the v/2 timeout rule."""
     p1, p2 = group.get_players()
 
-    # Fill in automatic bids on any missing submissions
-    for p in (p1, p2):
-        if p.bid is None:
-            p.auto_bid_used = True
-            p.bid = (p.valuation / 2) if first_price else p.valuation
+    # bids may still be None if a participant closed the tab mid-request
+    b1 = p1.bid if p1.bid is not None else cu(0)
+    b2 = p2.bid if p2.bid is not None else cu(0)
 
-    # Determine winner (ties broken randomly)
-    if p1.bid > p2.bid:
+    # winner/loser by higher bid (ties: random)
+    if b1 > b2:
         winner, loser = p1, p2
-    elif p2.bid > p1.bid:
+    elif b2 > b1:
         winner, loser = p2, p1
     else:
-        winner = random.choice([p1, p2])
+        winner = choice([p1, p2])
         loser = p1 if winner is p2 else p2
 
-    # Prices by format
-    price = loser.bid if not first_price else winner.bid
+    price_rule = rules_for_round(group.round_number)['price']
+    price = loser.bid if price_rule == 'second' else winner.bid
 
-    # If an automatic bid ends up being the highest, BOTH players get 0 payoff
-    # (per your spec for both first-price(v/2) and second-price(v) auto-bids).
-    if winner.auto_bid_used:
+    # If the winner was auto-bid v/2 (timed out), BOTH payoffs are 0 (your rule).
+    if winner.timed_out:
         group.price = cu(0)
         group.winner_id_in_group = 0
-        winner.payoff = cu(0)
-        loser.payoff = cu(0)
+        p1.payoff = cu(0)
+        p2.payoff = cu(0)
         return
 
-    # Standard payoffs
     group.price = price
     group.winner_id_in_group = winner.id_in_group
+
+    # Payoffs: winner gets valuation − price; loser gets 0
     winner.payoff = max(cu(0), winner.valuation - price)
-    loser.payoff = cu(0)
+    (loser).payoff = cu(0)
+
+
+# small RNG helper tied to session to avoid import-side effects
+class self_random:
+    import random as _r
+    _rng = _r.Random()
+
+    @classmethod
+    def randint(cls, a, b):
+        return cls._rng.randint(a, b)
+
 
 
