@@ -1,15 +1,12 @@
-{% load otree %}
+{% load otree static %}
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>{% block title %}Experiment 1{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
-    {% block styles %}{% endblock %}
-  </head>
-  <body class="container">
-    <h2>{% block page_title %}{% endblock %}</h2>
-    {% block page_body %}{% endblock %}
-    {% block scripts %}{% endblock %}
-  </body>
+<head>
+  <meta charset="utf-8">
+  <title>{% block page_title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
+</head>
+<body class="container my-4">
+  {% block page_body %}{% endblock %}
+</body>
 </html>
