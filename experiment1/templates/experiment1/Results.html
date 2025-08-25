@@ -4,13 +4,12 @@
 {% block page_title %}Results{% endblock %}
 
 {% block page_body %}
-  <p class="text-muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+  <p class="muted small">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
   <p><strong>Your bid:</strong> {{ your_bid }}</p>
   <p><strong>Opponent's bid:</strong> {{ opp_bid }}</p>
   <p><strong>Price paid:</strong> {{ price }}</p>
   <p><strong>Your valuation:</strong> {{ valuation }}</p>
-  <p><strong>Opponent’s valuation:</strong> {{ opp_valuation }}</p>
 
   {% if you_won %}
     <div class="alert alert-success">You won this round.</div>
