@@ -4,8 +4,13 @@
 {% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p class="text-muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+  {% if timeout_seconds %}
+    <div class="alert alert-warning">
+      Time left to complete this page: {{ timeout_seconds_display }}
+    </div>
+  {% endif %}
 
+  <p class="text-muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
   <p>Your valuation for this round is <strong>{{ valuation }}</strong>.</p>
 
   <form method="post">
