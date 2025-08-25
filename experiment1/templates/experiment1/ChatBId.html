@@ -1,0 +1,78 @@
+{% load otree %}
+{% extends "experiment1/BaseAuction.html" %}
+
+{% block page_title %}Submit your bid (chat enabled){% endblock %}
+
+{% block page_body %}
+  <p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+
+  <div class="chat-wrap">
+    <div class="bid-panel">
+      <p>Your valuation for this round is <strong>{{ valuation }}</strong> points.</p>
+      {% formfield player.bid label="Bid" %}
+      {% next_button %}
+      <p class="muted" style="margin-top:.4rem">You can chat until you submit or time runs out (1 minute).</p>
+    </div>
+
+    <div class="chat-panel">
+      <div id="chatlog" aria-live="polite"></div>
+      <div class="chat-input">
+        <input id="msg" type="text" placeholder="Type a message…" autocomplete="off" />
+        <button type="button" id="send">Send</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const myId = {{ my_id|json }};
+  const chatlog = document.getElementById('chatlog');
+  const input = document.getElementById('msg');
+  const sendBtn = document.getElementById('send');
+
+  function addMsg(sid, text) {
+    const row = document.createElement('div');
+    row.className = 'msg ' + (sid === myId ? 'me' : 'them');
+    row.textContent = (sid === myId ? 'You: ' : 'Opponent: ') + text;
+    chatlog.appendChild(row);
+    chatlog.scrollTop = chatlog.scrollHeight;
+  }
+
+  function send() {
+    const t = input.value.trim();
+    if (!t) return;
+    liveSend({type: 'msg', text: t});
+    input.value = '';
+  }
+
+  // Receive messages/history
+  liveRecv(function (data) {
+    if (!data) return;
+    if (data.kind === 'history' && Array.isArray(data.items)) {
+      data.items.forEach(m => addMsg(m.sid, m.text));
+    }
+    if (data.kind === 'message') {
+      addMsg(data.sid, data.text);
+    }
+  });
+
+  // Join and request history
+  window.addEventListener('load', function () {
+    liveSend({type: 'join'});
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); send(); }
+    });
+    sendBtn.addEventListener('click', send);
+
+    // Disable chat after form submit (leaving the page soon after)
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', () => {
+        input.disabled = true;
+        sendBtn.disabled = true;
+      });
+    }
+  });
+</script>
+{% endblock %}
