@@ -4,8 +4,10 @@
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
+  {# Show the common general instructions ONCE #}
   {% include "experiment1/Instructions_General.html" %}
 
+  {# Session-specific block #}
   {% if price_rule == 'first-price' and matching == 'random' and not chat %}
     {% include "experiment1/Instructions_S1_First.html" %}
   {% elif price_rule == 'first-price' and matching == 'fixed' and not chat %}
@@ -20,5 +22,7 @@
     {% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
   {% endif %}
 
-  {% next_button %}
+  <div class="mt-4">
+    {% next_button %}
+  </div>
 {% endblock %}
