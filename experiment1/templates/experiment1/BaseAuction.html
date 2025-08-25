@@ -1,11 +1,11 @@
 {% load otree static %}
+{% extends "global/Page.html" %}
 
 {% block global_styles %}
-  <link rel="stylesheet" href="{% static 'instructions.css' %}">
+<link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
 {% endblock %}
 
-
-{% block title %}{% block page_title %}Experiment{% endblock %}{% endblock %}
+{% block title %}Experiment 1{% endblock %}
 
 {% block content %}
   <div class="instr-container">
