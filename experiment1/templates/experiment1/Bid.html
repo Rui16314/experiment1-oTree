@@ -4,23 +4,11 @@
 {% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p class="muted small">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+  <p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
-  {% if timeout_seconds %}
-    <div class="alert alert-warning">
-      Time left to complete this page: {{ timeout_seconds_display }}
-    </div>
-  {% endif %}
+  <p>Your valuation for this round is <strong>{{ valuation }}</strong> points.</p>
 
-  <p>Your valuation for this round is <strong>{{ valuation }}</strong>.</p>
-
-  <form method="post">
-    {% formfield player.bid label="Bid" %}
-    <button class="btn btn-primary" type="submit">Next</button>
-  </form>
-
-  <div class="callout warning small mt-3">
-    <b>Timeout rule:</b> if you do not submit a bid, the system will submit <i>v/2</i> for you.
-    If <i>v/2</i> would win the auction, <b>both players get 0 points</b> for this round.
-  </div>
+  {% formfield player.bid label="Bid" %}
+  {% next_button %}
 {% endblock %}
+
