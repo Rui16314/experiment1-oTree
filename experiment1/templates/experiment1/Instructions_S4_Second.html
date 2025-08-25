@@ -1,0 +1,30 @@
+<h3>SESSION 4: SECOND-PRICE SEALED BID AUCTION INSTRUCTIONS</h3>
+
+<p>You will play 10 rounds of this game. At the start of each round, you'll be randomly paired with a different participant. This means your matches will change from round to round, and you'll never know who you'll be paired with in any given round.</p>
+
+<p>The seller is auctioning an indivisible item, and two buyers—yourself and your opponent, whom we match randomly—are interested in purchasing it. In each round, you'll participate in an auction to buy the good.</p>
+
+<p>In each round, your valuation and your opponent’s will be assigned randomly. Therefore, your and your opponent’s valuations will probably differ in each round. You will always know your own valuation but won’t learn your opponent’s until the round ends. Valuations are chosen independently and uniformly from 0 to 100, in increments of cents. As a result, your valuation will be 0.01n with a probability of 1/10,000, where n ranges from 0 to 10,000.</p>
+
+<p>In each round, after learning your valuation, you have 1 minute to place your bid. Once you submit your bid, the round will end. You will not see your opponent’s bid until after the round ends, when you learn the winning bid and how many points you earned that round.</p>
+
+<h4>POINTS YOU EARN IN EACH ROUND WILL DEPEND ON THESE THREE FACTORS</h4>
+<ol>
+  <li>Your bid</li>
+  <li>Your opponent’s bid</li>
+  <li>Your valuation</li>
+</ol>
+
+<p><strong>More specifically,</strong></p>
+<ul>
+  <li>If your bid is less than your opponent’s bid, then you lose the auction and receive 0 points.</li>
+  <li>If your bid is higher than your opponent’s bid, then you win the auction. Thus, your points will be
+    <span class="eq">Your points = Your valuation − Your opponent’s bid</span>
+  </li>
+  <li>If your bid is equal to your opponent’s bid, then your points will be determined according to the following:<br>
+    <span class="eq">Your points = (Your valuation − Your opponent’s bid) / 2</span>
+  </li>
+  <li>If you do not submit your bid within the 1-minute window, you lose the auction and receive 0 points.</li>
+</ul>
+
+<p>At the end of each round, you will find out whether you win the auction, your opponent’s valuation, bid, and your points.</p>
