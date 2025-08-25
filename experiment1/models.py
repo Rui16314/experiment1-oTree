@@ -2,60 +2,75 @@
 from otree.api import *
 from random import randint, choice
 
+
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
-    NUM_ROUNDS = 60
-    ROUNDS_PER_SESSION = 10 
+
+    # 6 sessions × 10 rounds each
+    ROUNDS_PER_SESSION = 10
+    NUM_SESSIONS = 6
+    NUM_ROUNDS = ROUNDS_PER_SESSION * NUM_SESSIONS
+
 
 class Subsession(BaseSubsession):
     pass
+
 
 class Group(BaseGroup):
     price = models.CurrencyField(initial=cu(0))
     winner_id_in_group = models.IntegerField(initial=0)
 
+
 class Player(BasePlayer):
     valuation = models.CurrencyField()
     bid = models.CurrencyField(min=0, max=100, blank=True)
 
-# ---- helpers you already have (or equivalent) ----
-def draw_valuation():
-    # uniform 0–100 with cents
+
+# ---------- helpers ----------
+def phase_and_round_in_session(round_number: int):
+    """(session_no 1..6, round_in_session 1..10)"""
+    s = (round_number - 1) // C.ROUNDS_PER_SESSION + 1
+    r = (round_number - 1) % C.ROUNDS_PER_SESSION + 1
+    return s, r
+
+
+def rules_for_round(round_number: int):
+    """Return dict(price='first'|'second', matching='random'|'fixed', chat: bool)."""
+    session_no, _ = phase_and_round_in_session(round_number)
+    price = 'first' if session_no <= 3 else 'second'
+    matching = 'random' if session_no in (1, 4) else 'fixed'
+    chat = session_no in (3, 6)
+    return dict(price=price, matching=matching, chat=chat)
+
+
+def _draw_valuation() -> currency:
+    # uniform 0–100 cents
     return cu(randint(0, 10000)) / 100
 
-def phase_and_round_in_session(rn: int):
-    return (rn - 1) // 10 + 1, (rn - 1) % 10 + 1
 
-def rules_for_round(rn: int):
-    s, _ = phase_and_round_in_session(rn)
-    return dict(price=('first' if s <= 3 else 'second'),
-                matching=('random' if s in (1, 4) else 'fixed'),
-                chat=(s in (3, 6)))
-
+# ---------- oTree hooks ----------
 def creating_session(subsession: Subsession):
-    # your grouping (random vs fixed within 10-round blocks)
-    s, ris = phase_and_round_in_session(subsession.round_number)
-    if rules_for_round(subsession.round_number)['matching'] == 'fixed':
-        base = (s - 1) * 10 + 1
-        subsession.group_randomly() if ris == 1 else subsession.group_like_round(base)
-    else:
-        subsession.group_randomly()
+    """Set groups and give every player a valuation BEFORE any page renders."""
+    rules = rules_for_round(subsession.round_number)
+    session_no, round_in_session = phase_and_round_in_session(subsession.round_number)
 
-    # *** set valuation for EVERY player, EVERY round ***
+    if rules['matching'] == 'random':
+        subsession.group_randomly()
+    else:
+        base_round = (session_no - 1) * C.ROUNDS_PER_SESSION + 1
+        if round_in_session == 1:
+            subsession.group_randomly()
+        else:
+            subsession.group_like_round(base_round)
+
+    # give everyone a valuation now so templates can read it safely
     for p in subsession.get_players():
-        p.valuation = draw_valuation()
+        p.valuation = _draw_valuation()
+
 
 def set_payoffs(group: Group):
     p1, p2 = group.get_players()
-
-    # --- last-resort guard (prevents None ever reaching templates) ---
-    if p1.field_maybe_none('valuation') is None:
-        p1.valuation = draw_valuation()
-    if p2.field_maybe_none('valuation') is None:
-        p2.valuation = draw_valuation()
-    # -----------------------------------------------------------------
-
     b1 = p1.bid or cu(0)
     b2 = p2.bid or cu(0)
 
@@ -64,13 +79,16 @@ def set_payoffs(group: Group):
     elif b2 > b1:
         winner, loser = p2, p1
     else:
-        winner = choice([p1, p2]); loser = p1 if winner is p2 else p2
+        winner = choice([p1, p2])
+        loser = p1 if winner is p2 else p2
 
     price_rule = rules_for_round(group.round_number)['price']
-    group.price = loser.bid if price_rule == 'second' else winner.bid
-    group.winner_id_in_group = winner.id_in_group
+    price = loser.bid if price_rule == 'second' else winner.bid
 
-    winner.payoff = max(cu(0), winner.valuation - group.price)
+    group.price = price
+    group.winner_id_in_group = winner.id_in_group
+    winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
+
 
 
