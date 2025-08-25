@@ -1,53 +1,52 @@
 # experiment1/pages.py
 from otree.api import *
-from .models import C, Player, Group, Subsession, set_payoffs, rules_for_round, session_no_and_round_in_session
-
-
-def price_label(round_number: int):
-    return 'first-price' if rules_for_round(round_number)['price'] == 'first' else 'second-price'
-
+from .models import C, set_payoffs, rules_for_round, session_and_round_in_session, draw_valuation
 
 class Instructions(Page):
+    """Shown once per session (rounds 1, 11, 21, 31, 41, 51)."""
+    def is_displayed(self):
+        _, ris = session_and_round_in_session(self.round_number)
+        return ris == 1
+
     def vars_for_template(self):
-        s_no, r_in = session_no_and_round_in_session(self.round_number)
-        rules = rules_for_round(self.round_number)
+        s_no, _ = session_and_round_in_session(self.round_number)
+        r = rules_for_round(self.round_number)
+        # Pick which session-specific include to render
+        template_key = {
+            1: 'S1_First',
+            2: 'S2_FirstRepeated',
+            3: 'S3_FirstRepeated_Chat',
+            4: 'S4_Second',
+            5: 'S5_SecondRepeated',
+            6: 'S6_SecondRepeated_Chat',
+        }[s_no]
         return dict(
             session_no=s_no,
-            round_in_session=r_in,
-            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
-            price_rule=price_label(self.round_number),
-            matching=rules['matching'],
-            chat=rules['chat'],
+            include_name=f"experiment1/Instructions_{template_key}.html",
+            show_general=(s_no == 1),   # show general instructions only before Session 1
         )
-
-
-class ChatIntro(Page):
-    """Placeholder page shown only in chat sessions.
-    If you add a real chat app later, replace this page with that app.
-    """
-    def is_displayed(self):
-        return rules_for_round(self.round_number)['chat']
 
 
 class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
     timeout_seconds = 60
+    timeout_submission = {'bid': cu(0)}  # auto-bid if time runs out
+
+    # Defensive: make sure valuation exists at render time (e.g., after DB reset)
+    def _ensure_valuation(self):
+        if self.player.valuation is None:
+            self.player.valuation = draw_valuation()
 
     def vars_for_template(self):
-        s_no, r_in = session_no_and_round_in_session(self.round_number)
+        self._ensure_valuation()
+        s_no, ris = session_and_round_in_session(self.round_number)
         return dict(
             session_no=s_no,
-            round_in_session=r_in,
+            round_in_session=ris,
             ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
             valuation=self.player.valuation,
         )
-
-    def before_next_page(self):
-        # If the player times out: system sets bid = v/2 and marks timed_out
-        if self.timeout_happened:
-            self.player.bid = (self.player.valuation / 2)
-            self.player.timed_out = True
 
 
 class ResultsWaitPage(WaitPage):
@@ -56,30 +55,22 @@ class ResultsWaitPage(WaitPage):
 
 class Results(Page):
     def vars_for_template(self):
-        s_no, r_in = session_no_and_round_in_session(self.round_number)
         opp = self.player.get_others_in_group()[0]
+        s_no, ris = session_and_round_in_session(self.round_number)
         you_won = (self.group.winner_id_in_group == self.player.id_in_group)
         return dict(
             session_no=s_no,
-            round_in_session=r_in,
+            round_in_session=ris,
             ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
             your_bid=self.player.bid,
             opp_bid=opp.bid,
-            valuation=self.player.valuation,
             price=self.group.price,
+            valuation=self.player.valuation,
             you_won=you_won,
         )
 
 
-def chat_first(round_number: int):
-    """True for sessions 3 and 6 (chat sessions)."""
-    r = rules_for_round(round_number)
-    return r['chat']
-
-
-# Page order:
-#   Instructions  -> (ChatIntro if chat) -> Bid -> ResultsWaitPage -> Results
-page_sequence = [Instructions, ChatIntro, Bid, ResultsWaitPage, Results]
+page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
 
 
 
