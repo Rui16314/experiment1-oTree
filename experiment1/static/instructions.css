@@ -20,3 +20,20 @@
 .hl { background:#fff59d; padding:0 .2em; border-radius:.2em; }
 .eq { background:#fff59d; font-weight:600; padding:.15em .35em; border-radius:.25em; }
 
+.chat-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.bid-panel { background:#fafbff; border:1px solid #e6e9f2; border-radius:8px; padding:12px; }
+.chat-panel { border:1px solid #e6e9f2; border-radius:8px; padding:10px; background:#fff; height: 320px; display:flex; flex-direction:column; }
+#chatlog { flex:1; overflow:auto; border:1px solid #f0f2f7; border-radius:6px; padding:6px; background:#fcfdff; }
+.chat-input { display:flex; gap:8px; margin-top:8px; }
+.chat-input input { flex:1; padding:.45rem .6rem; }
+.chat-input button { padding:.45rem .8rem; }
+.msg { margin:.15rem 0; }
+.msg.me { text-align:right; font-weight:600; }
+.msg.them { text-align:left; }
+
+
