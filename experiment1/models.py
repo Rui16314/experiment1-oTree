@@ -6,8 +6,11 @@ import random
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
-    NUM_ROUNDS = 60               # 6 sessions × 10 rounds
+
+    # 6 sessions x 10 rounds
     ROUNDS_PER_SESSION = 10
+    NUM_SESSIONS = 6
+    NUM_ROUNDS = ROUNDS_PER_SESSION * NUM_SESSIONS
 
 
 class Subsession(BaseSubsession):
@@ -15,36 +18,36 @@ class Subsession(BaseSubsession):
 
 
 class Group(BaseGroup):
-    price = models.CurrencyField()
-    winner_id_in_group = models.IntegerField()
+    price = models.CurrencyField(initial=cu(0))
+    winner_id_in_group = models.IntegerField(initial=0)
 
 
 class Player(BasePlayer):
-    valuation = models.CurrencyField()
+    valuation = models.CurrencyField(min=0, max=100)
     bid = models.CurrencyField(min=0, max=100, blank=True)
+    auto_bid_used = models.BooleanField(initial=False)
 
 
-# ---------- helpers about session/round and rules ----------
+# ---------- helpers ----------
 
 def session_and_round(rn: int):
-    """returns (session_no 1..6, round_in_session 1..10)"""
-    s_no = (rn - 1) // C.ROUNDS_PER_SESSION + 1
-    r_in_s = (rn - 1) % C.ROUNDS_PER_SESSION + 1
-    return s_no, r_in_s
+    """Return (session_no 1..6, round_in_session 1..10) for absolute round rn."""
+    s = (rn - 1) // C.ROUNDS_PER_SESSION + 1
+    r = (rn - 1) % C.ROUNDS_PER_SESSION + 1
+    return s, r
 
 
 def rules_for_round(rn: int):
-    """Rules for a given round number."""
-    s_no, _ = session_and_round(rn)
-    return dict(
-        price=('first' if s_no <= 3 else 'second'),
-        matching=('random' if s_no in (1, 4) else 'fixed'),
-        chat=(s_no in (3, 6)),
-    )
+    """What rules apply in this round?"""
+    s, _ = session_and_round(rn)
+    price = 'first' if s <= 3 else 'second'
+    matching = 'random' if s in (1, 4) else 'fixed'
+    chat = s in (3, 6)
+    return dict(price=price, matching=matching, chat=chat)
 
 
-def draw_valuation():
-    # uniform 0–100 (in cents), returned as Currency
+def draw_valuation() -> currency:
+    # uniform in cents, 0.00 .. 100.00
     return cu(random.randint(0, 10000)) / 100
 
 
@@ -52,47 +55,61 @@ def draw_valuation():
 
 def creating_session(subsession: Subsession):
     """Group players & draw valuations each round."""
-    s_no, r_in_s = session_and_round(subsession.round_number)
-    r = rules_for_round(subsession.round_number)
+    s, r = session_and_round(subsession.round_number)
+    rules = rules_for_round(subsession.round_number)
 
-    # grouping
-    if r['matching'] == 'random':
+    if rules['matching'] == 'random':
         subsession.group_randomly()
     else:
-        base_round = (s_no - 1) * C.ROUNDS_PER_SESSION + 1
-        if r_in_s == 1:
-            subsession.group_randomly()          # choose pairs at start of session block
+        # fixed partner within each 10-round block
+        base_round = (s - 1) * C.ROUNDS_PER_SESSION + 1
+        if r == 1:
+            subsession.group_randomly()
         else:
             subsession.group_like_round(base_round)
 
-    # assign valuations for this round
     for p in subsession.get_players():
         p.valuation = draw_valuation()
 
 
 def set_payoffs(group: Group):
-    """Compute price & payoffs after both bids are in."""
-    p1, p2 = group.get_players()
-    b1 = p1.bid or cu(0)
-    b2 = p2.bid or cu(0)
+    """Compute price & payoffs after both bids are in, including auto-bid rules."""
+    rules = rules_for_round(group.round_number)
+    first_price = (rules['price'] == 'first')
 
-    # determine winner (break ties at random)
-    if b1 > b2:
+    p1, p2 = group.get_players()
+
+    # Fill in automatic bids on any missing submissions
+    for p in (p1, p2):
+        if p.bid is None:
+            p.auto_bid_used = True
+            p.bid = (p.valuation / 2) if first_price else p.valuation
+
+    # Determine winner (ties broken randomly)
+    if p1.bid > p2.bid:
         winner, loser = p1, p2
-    elif b2 > b1:
+    elif p2.bid > p1.bid:
         winner, loser = p2, p1
     else:
         winner = random.choice([p1, p2])
         loser = p1 if winner is p2 else p2
 
-    price_rule = rules_for_round(group.round_number)['price']
-    price = loser.bid if price_rule == 'second' else winner.bid
+    # Prices by format
+    price = loser.bid if not first_price else winner.bid
 
+    # If an automatic bid ends up being the highest, BOTH players get 0 payoff
+    # (per your spec for both first-price(v/2) and second-price(v) auto-bids).
+    if winner.auto_bid_used:
+        group.price = cu(0)
+        group.winner_id_in_group = 0
+        winner.payoff = cu(0)
+        loser.payoff = cu(0)
+        return
+
+    # Standard payoffs
     group.price = price
     group.winner_id_in_group = winner.id_in_group
-
     winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
-
 
 
