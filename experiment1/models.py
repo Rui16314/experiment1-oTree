@@ -1,6 +1,6 @@
 from otree.api import *
 from random import randint, choice
-
+import time
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
@@ -116,6 +116,16 @@ def set_payoffs(group: Group):
     winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
 
+class ChatMessage(ExtraModel):  # ADD
+    group = models.Link(Group)
+    sender_id_in_group = models.IntegerField()
+    text = models.LongStringField()
+    ts = models.FloatField()  # epoch seconds
+
+
+def chat_history_for(group):  # ADD
+    rows = ChatMessage.filter(group=group).order_by('id')
+    return [{'sid': r.sender_id_in_group, 'text': r.text, 'ts': r.ts} for r in rows]
 
 
 
