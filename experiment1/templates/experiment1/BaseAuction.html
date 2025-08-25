@@ -1,13 +1,15 @@
-{% load otree static %}
-
-{% block global_styles %}
-<link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
-{% endblock %}
-
-{% block title %}Experiment 1{% endblock %}
-
-{% block content %}
-  <div class="instr-container">
+{% load otree %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Experiment 1{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'experiment1/instructions.css' %}">
+    {% block styles %}{% endblock %}
+  </head>
+  <body class="container">
+    <h2>{% block page_title %}{% endblock %}</h2>
     {% block page_body %}{% endblock %}
-  </div>
-{% endblock %}
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
