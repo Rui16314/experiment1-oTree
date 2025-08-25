@@ -1,108 +1,113 @@
 # experiment1/pages.py
 from otree.api import *
-from .models import (
-    C, Player, Group, Subsession,
-    draw_valuation, set_payoffs,
-    phase_and_round_in_session, rules_for_round
-)
-
-ROUNDS_PER_SESSION = 10
-BID_TIMEOUT_SECONDS = 60
+from .models import C, set_payoffs, session_and_round_in_session, rules_for_round
+from .models import ChatMessage, chat_history_for   # NEW
+import time                                         # NEW
 
 
-def _price_label_for_round(rn: int) -> str:
-    """Return the label your templates check: 'first-price' or 'second-price'."""
-    return 'first-price' if rules_for_round(rn)['price'] == 'first' else 'second-price'
+def _session_and_round(rn: int):
+    return session_and_round_in_session(rn)
 
 
-def _fmt_mmss(seconds: int) -> str:
-    m = seconds // 60
-    s = seconds % 60
-    return f"{m}:{s:02d}"
+class Instructions(Page):
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number in (1, 11, 21, 31, 41, 51)
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        s_no, r_in_s = _session_and_round(player.round_number)
+        return dict(session_no=s_no, round_in_session=r_in_s)
 
 
-class _CommonPage(Page):
-    """Mix-in with helpers & common context."""
-    def _ensure_valuation(self):
-        """
-        Make sure valuation exists before any template accesses it.
-        Accessing a null CurrencyField raises in oTree, so we catch and set.
-        """
-        try:
-            _ = self.player.valuation  # triggers TypeError if still null
-        except TypeError:
-            self.player.valuation = draw_valuation()
-
-    def _common_context(self) -> dict:
-        s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        r = rules_for_round(self.round_number)
-        return dict(
-            # session/round info for headers
-            session_no=s_no,                    # 1..6
-            round_in_session=r_in_s,            # 1..10
-            ROUNDS_PER_SESSION=ROUNDS_PER_SESSION,
-
-            # rule switches for your instruction partials
-            price_rule=_price_label_for_round(self.round_number),   # 'first-price' / 'second-price'
-            matching=r['matching'],            # 'random' or 'fixed'
-            chat=r['chat'],                    # True in sessions 3 & 6
-            tie_rule='random',                 # as specified
-        )
-
-
-class Instructions(_CommonPage):
-    """Show once at the beginning of each 10-round session."""
-    def is_displayed(self):
-        _, r_in_s = phase_and_round_in_session(self.round_number)
-        return r_in_s == 1
-
-    def vars_for_template(self):
-        ctx = self._common_context()
-        # also expose total rounds (60) if any template uses it
-        ctx.update(ROUNDS=C.NUM_ROUNDS)
-        return ctx
-
-
-class Bid(_CommonPage):
+class ChatBid(Page):  # NEW
+    """Bid page WITH live chat — shows only in Sessions 3 & 6."""
     form_model = 'player'
     form_fields = ['bid']
-    timeout_seconds = BID_TIMEOUT_SECONDS
-    timeout_submission = {'bid': cu(0)}
+    timeout_seconds = 60
+    live_method = 'live_chat'
 
-    def vars_for_template(self):
-        # safety: never let valuation be null when template renders
-        self._ensure_valuation()
-        ctx = self._common_context()
-        ctx.update(
-            valuation=self.player.valuation,
-            timeout_seconds_display=_fmt_mmss(self.timeout_seconds or BID_TIMEOUT_SECONDS),
+    @staticmethod
+    def is_displayed(player: Player):
+        return rules_for_round(player.round_number)['chat']  # True in sessions 3 & 6
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        s_no, r_in_s = _session_and_round(player.round_number)
+        return dict(
+            session_no=s_no,
+            round_in_session=r_in_s,
+            valuation=player.valuation,
+            my_id=player.id_in_group,
         )
-        return ctx
+
+    # live handler for chat
+    def live_chat(self, data):
+        kind = data.get('type')
+        if kind == 'join':
+            # send existing history only to the joiner
+            return {
+                self.id_in_group: {
+                    'kind': 'history',
+                    'items': chat_history_for(self.group),
+                }
+            }
+        if kind == 'msg':
+            text = (data.get('text') or '').strip()
+            if not text:
+                return
+            ChatMessage.create(
+                group=self.group,
+                sender_id_in_group=self.player.id_in_group,
+                text=text,
+                ts=time.time(),  # timestamp here -> needs import time
+            )
+            # broadcast to both players on the page
+            return {0: {'kind': 'message', 'sid': self.player.id_in_group, 'text': text}}
 
 
-class ResultsWaitPage(WaitPage):
+class Bid(Page):
+    """Bid page WITHOUT chat — shows in sessions 1,2,4,5."""
+    form_model = 'player'
+    form_fields = ['bid']
+    timeout_seconds = 60
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return not rules_for_round(player.round_number)['chat']
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        s_no, r_in_s = _session_and_round(player.round_number)
+        return dict(
+            session_no=s_no,
+            round_in_session=r_in_s,
+            valuation=player.valuation
+        )
+
+
+class ComputeResults(WaitPage):
     after_all_players_arrive = set_payoffs
 
 
-class Results(_CommonPage):
-    def vars_for_template(self):
-        ctx = self._common_context()
-
-        others = self.player.get_others_in_group()
-        opp = others[0] if others else None
-
-        you_won = (self.group.winner_id_in_group == self.player.id_in_group)
-        ctx.update(
-            your_bid=self.player.bid,
-            opp_bid=(opp.bid if opp else cu(0)),
-            valuation=self.player.valuation,
-            price=self.group.price,
+class Results(Page):
+    @staticmethod
+    def vars_for_template(player: Player):
+        s_no, r_in_s = _session_and_round(player.round_number)
+        opp = player.get_others_in_group()[0]
+        g = player.group
+        you_won = (g.winner_id_in_group == player.id_in_group)
+        return dict(
+            session_no=s_no,
+            round_in_session=r_in_s,
+            your_bid=player.bid if player.bid is not None else cu(0),
+            opp_bid=opp.bid if opp.bid is not None else cu(0),
+            price=g.price,
+            valuation=player.valuation,
             you_won=you_won,
         )
-        return ctx
 
 
-page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
-
+page_sequence = [Instructions, ChatBid, Bid, ComputeResults, Results]
 
 
