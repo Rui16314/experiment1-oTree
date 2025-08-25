@@ -6,6 +6,7 @@ class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
     NUM_ROUNDS = 60
+    ROUNDS_PER_SESSION = 10 
 
 class Subsession(BaseSubsession):
     pass
