@@ -16,20 +16,18 @@ class Instructions(Page):
             session_no=s_no,
             round_in_session=r_in_s,
             ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
-            price_rule=rules['price_rule'],       # 'first' / 'second'
-            matching=rules['matching'],           # 'random' / 'fixed'
-            chat=rules['chat'],                   # True/False
+            price_rule=rules['price_rule'],
+            matching=rules['matching'],
+            chat=rules['chat'],
         )
 
 
 class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
-    timeout_seconds = 60  # shows the yellow oTree timer box automatically
+    timeout_seconds = 60
 
-    # simple live chat, enabled only on chat sessions (3 and 6)
     def live_method(self, data):
-        # data is a dict sent from JS; broadcast to both players
         text = (data or {}).get('text', '').strip()
         if not text:
             return
@@ -47,15 +45,14 @@ class Bid(Page):
         )
 
     def before_next_page(self, timeout_happened):
-        # if participant runs out of time, set bid to 0 so payoff code never sees None
         if timeout_happened and self.player.bid is None:
+            # Note: The instructions specify v/2 or v for bots, but this handles human timeouts.
             self.player.bid = cu(0)
 
 
 class ResultsWaitPage(WaitPage):
     title_text = "Please wait"
     body_text = "Waiting for the other participant."
-
     after_all_players_arrive = set_group_payoffs
 
 
@@ -76,6 +73,10 @@ class Results(Page):
         )
 
 
-page_sequence = [Instructions, Bid, ResultsWaitPage, Results]
+class FinalResults(Page):
+    def is_displayed(self):
+        return self.round_number == C.NUM_ROUNDS
 
+
+page_sequence = [Instructions, Bid, ResultsWaitPage, Results, FinalResults]
 
