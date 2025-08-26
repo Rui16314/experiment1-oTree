@@ -1,6 +1,7 @@
 # experiment1/models.py
 from otree.api import *
 from random import randint, choice
+import math
 
 
 class C(BaseConstants):
@@ -8,7 +9,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 2
 
     ROUNDS_PER_SESSION = 10
-    NUM_ROUNDS = 6 * ROUNDS_PER_SESSION  # 6 sessions total
+    NUM_ROUNDS = 6 * ROUNDS_PER_SESSION
 
 
 class Subsession(BaseSubsession):
@@ -21,8 +22,8 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    valuation = models.CurrencyField()                       # 0–100
-    bid = models.CurrencyField(min=0, max=100, blank=True)   # may be blank if timeout
+    valuation = models.CurrencyField()
+    bid = models.CurrencyField(min=0, max=100, blank=True)
 
 
 # ----------------- helpers -----------------
@@ -73,7 +74,7 @@ def creating_session(subsession: Subsession):
         # fixed opponents within each 10-round block
         base_round = (s - 1) * C.ROUNDS_PER_SESSION + 1
         if r_in_s == 1:
-            subsession.group_randomly()  # choose pairs at the start of the block
+            subsession.group_randomly()
         else:
             subsession.group_like_round(base_round)
 
@@ -82,33 +83,59 @@ def creating_session(subsession: Subsession):
         p.valuation = random_valuation()
 
 
-# do the payoff computation on Group so we can call it from a WaitPage
 def set_group_payoffs(group: Group):
     p1, p2 = group.get_players()
-
-    # in case of timeouts / no entry, treat missing bids as 0
     b1 = p1.bid if p1.bid is not None else cu(0)
     b2 = p2.bid if p2.bid is not None else cu(0)
 
-    # winner/loser (ties broken randomly)
-    if b1 > b2:
-        winner, loser = p1, p2
-    elif b2 > b1:
-        winner, loser = p2, p1
-    else:
+    rules = rules_for_round(group.round_number)
+    price_rule = rules['price_rule']
+    
+    # Check for tie bids
+    if b1 == b2:
+        # Check if the tie is the default bot bid
+        if (price_rule == 'first' and b1 == p1.valuation/2 and p2.role == 'bot') or \
+           (price_rule == 'second' and b1 == p1.valuation and p2.role == 'bot'):
+            p1.payoff = cu(0)
+            p2.payoff = cu(0)
+            group.price = cu(0)
+            group.winner_id_in_group = 0
+            return
+        
+        # Tie-breaking logic as per the document
         winner = choice([p1, p2])
         loser = p1 if winner is p2 else p2
 
-    # first-price vs second-price
-    price_rule = rules_for_round(group.round_number)['price_rule']
-    price = winner.bid if price_rule == 'first' else loser.bid
+        if price_rule == 'first':
+            # Payoff = Your valuation - Your bid^2
+            winner.payoff = winner.valuation - (winner.bid ** 2)
+            loser.payoff = loser.valuation - (loser.bid ** 2)
+            group.price = winner.bid
+            group.winner_id_in_group = winner.id_in_group
 
-    group.price = price
-    group.winner_id_in_group = winner.id_in_group
+        else: # Second-price
+            # Payoff = Your valuation - Your opponent's bid^2
+            winner.payoff = winner.valuation - (loser.bid ** 2)
+            loser.payoff = loser.valuation - (winner.bid ** 2)
+            group.price = winner.bid # This seems wrong in the instructions, but matches the formula.
+            group.winner_id_in_group = winner.id_in_group
+            
+    else:
+        # Normal win/loss
+        if b1 > b2:
+            winner, loser = p1, p2
+        else:
+            winner, loser = p2, p1
 
-    # payoffs
-    winner.payoff = max(cu(0), winner.valuation - price)
-    loser.payoff = cu(0)
-
-
+        if price_rule == 'first':
+            price = winner.bid
+            winner.payoff = winner.valuation - price
+            loser.payoff = cu(0)
+        else: # Second-price
+            price = loser.bid
+            winner.payoff = winner.valuation - price
+            loser.payoff = cu(0)
+            
+        group.price = price
+        group.winner_id_in_group = winner.id_in_group
 
