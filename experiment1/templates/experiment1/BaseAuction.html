@@ -1,14 +1,23 @@
-{% load otree static %}
+{% load otree %}
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>{% block page_title %}{% endblock %}</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'instructions.css' %}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block page_title %}{% endblock %}</title>
 
-</head>
-<body class="container my-4">
-  {% block page_body %}{% endblock %}
-</body>
+    <!-- Use a direct URL to avoid the 'static' tag crash -->
+    <link rel="stylesheet" href="/static/experiment1/instructions.css" />
+
+    <!-- small built-in fallbacks so the page still looks fine -->
+    <style>
+      .muted{color:#6c757d}
+      .alert{background:#f5f7fb;border-radius:.5rem;padding:.6rem 1rem}
+      .alert.success{background:#dcf7e7}
+      .callout{background:#f6f1ff;border-left:6px solid #845ef7;padding:1rem 1.25rem;border-radius:.5rem}
+      .mt-3{margin-top:1rem}
+    </style>
+  </head>
+  <body>
+    {% block page_body %}{% endblock %}
+  </body>
 </html>
