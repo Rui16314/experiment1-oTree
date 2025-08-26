@@ -56,27 +56,85 @@ class ResultsWaitPage(WaitPage):
     after_all_players_arrive = set_group_payoffs
 
 
-class Results(Page):
-    def vars_for_template(self):
+
+# ... (existing classes like Instructions, Bid, ResultsWaitPage, Results) ...
+
+class SessionSummary(Page):
+    def is_displayed(self):
         s_no, r_in_s = session_no_and_round_in_session(self.round_number)
-        other = self.player.get_others_in_group()[0]
-        you_won = self.group.winner_id_in_group == self.player.id_in_group
-        return dict(
-            session_no=s_no,
-            round_in_session=r_in_s,
-            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
-            your_bid=self.player.bid,
-            opp_bid=other.bid,
-            valuation=self.player.valuation,
-            price=self.group.price,
-            you_won=you_won,
-        )
+        return r_in_s == C.ROUNDS_PER_SESSION and s_no < 6
+
+    def vars_for_template(self):
+        # ... (logic to generate data for single session summary) ...
+        pass
 
 
 class FinalResults(Page):
     def is_displayed(self):
         return self.round_number == C.NUM_ROUNDS
 
+    def vars_for_template(self):
+        # Data aggregation from all sessions
+        all_players = self.subsession.in_rounds(1, C.NUM_ROUNDS).get_players()
+        all_sessions_bids = []
+        all_session_revenues_by_round = []
+        all_session_revenues = []
 
-page_sequence = [Instructions, Bid, ResultsWaitPage, Results, FinalResults]
+        for s_no in range(1, 7):
+            session_players = [p for p in all_players if session_no_and_round_in_session(p.round_number)[0] == s_no]
+            session_groups = [g for g in self.subsession.in_rounds(1, C.NUM_ROUNDS).get_groups() if session_no_and_round_in_session(g.round_number)[0] == s_no]
+            
+            # 1) Average Bidding Behavior
+            valuations = [p.valuation for p in session_players]
+            bids = [p.bid for p in session_players]
+            
+            bins = [[] for _ in range(11)]
+            for v, b in zip(valuations, bids):
+                if b is not None:
+                    bin_index = min(int(v // 10), 9)
+                    bins[bin_index].append(b)
 
+            avg_bids = [sum(b) / len(b) if b else None for b in bins]
+            
+            rules = rules_for_round((s_no - 1) * C.ROUNDS_PER_SESSION + 1)
+            all_sessions_bids.append({
+                'session_no': s_no,
+                'price_rule': rules['price_rule'],
+                'matching': rules['matching'],
+                'chat': rules['chat'],
+                'data': avg_bids
+            })
+
+            # 2) Average revenue by round
+            revenues_by_round = []
+            for r_in_s in range(1, 11):
+                round_groups = [g for g in session_groups if session_no_and_round_in_session(g.round_number)[1] == r_in_s]
+                revenues = [g.price for g in round_groups]
+                if revenues:
+                    revenues_by_round.append(sum(revenues) / len(revenues))
+                else:
+                    revenues_by_round.append(None)
+            all_session_revenues_by_round.append({
+                'session_no': s_no,
+                'data': revenues_by_round
+            })
+            
+            # 3) Overall Average Revenue
+            all_revenues = [g.price for g in session_groups]
+            avg_revenue = sum(all_revenues) / len(all_revenues) if all_revenues else 0
+            all_session_revenues.append({
+                'session_no': s_no,
+                'price_rule': rules['price_rule'],
+                'matching': rules['matching'],
+                'chat': rules['chat'],
+                'avg_revenue': avg_revenue
+            })
+
+        return dict(
+            all_session_bids=all_sessions_bids,
+            all_session_revenues_by_round=all_session_revenues_by_round,
+            all_session_revenues=all_session_revenues
+        )
+
+
+page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
