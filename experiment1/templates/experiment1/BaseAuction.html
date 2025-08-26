@@ -1,22 +1,30 @@
-{% load otree %}
+{% load otree static %}
 <!doctype html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <title>{% block page_title %}{% endblock %}</title>
+    <meta charset="utf-8">
+    <title>{% block title %}Experiment 1{% endblock %}</title>
 
-    <!-- Use a direct URL to avoid the 'static' tag crash -->
+    <!-- Your stylesheet – stays at experiment1/static/instructions.css -->
     <link rel="stylesheet" href="{% static 'instructions.css' %}">
-    <!-- small built-in fallbacks so the page still looks fine -->
     <style>
-      .muted{color:#6c757d}
-      .alert{background:#f5f7fb;border-radius:.5rem;padding:.6rem 1rem}
-      .alert.success{background:#dcf7e7}
-      .callout{background:#f6f1ff;border-left:6px solid #845ef7;padding:1rem 1.25rem;border-radius:.5rem}
-      .mt-3{margin-top:1rem}
+      /* a couple of tiny helpers so you don't need to touch your CSS file */
+      .muted { color: #6c757d; }
+      .alert { padding:.75rem 1rem; border-radius:.5rem; background:#f5f5f5; }
+      .alert.success { background:#d9f0e2; }
+      .chat {
+        border:1px solid #ddd;border-radius:.5rem; padding: .5rem; margin:1rem 0;
+      }
+      .chat-messages {
+        height: 180px; overflow-y: auto; border:1px solid #eee; padding:.5rem; margin-bottom:.5rem;
+        background:#fff;
+      }
+      .chat-row { margin: .25rem 0; }
+      .chat-me { font-weight:600; }
     </style>
   </head>
   <body>
+    <h2>{% block page_title %}{% endblock %}</h2>
     {% block page_body %}{% endblock %}
   </body>
 </html>
