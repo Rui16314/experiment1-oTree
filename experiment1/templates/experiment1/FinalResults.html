@@ -1,0 +1,111 @@
+{% load otree static %}
+{% extends "experiment1/BaseAuction.html" %}
+
+{% block page_title %}Final Results{% endblock %}
+
+{% block page_body %}
+<div class="callout">
+    <h3>Data to present</h3>
+    <p>Below are the charts computed from all six sessions.</p>
+</div>
+
+<h4>1) Average bidding behavior by valuation</h4>
+<canvas id="allSessionsBids" height="150"></canvas>
+
+<h4 class="mt-4">2) Average revenue (winning price) by round</h4>
+<canvas id="allSessionsRevenue" height="150"></canvas>
+
+<h4 class="mt-4">3) Overall Average Revenue</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Session</th>
+            <th>Auction Type</th>
+            <th>Opponent Matching</th>
+            <th>Communication</th>
+            <th>Average Revenue</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in all_session_revenues %}
+        <tr>
+            <td>{{ s.session_no }}</td>
+            <td>{{ s.price_rule }}</td>
+            <td>{{ s.matching }}</td>
+            <td>{% if s.chat %}Yes{% else %}No{% endif %}</td>
+            <td><b>{{ s.avg_revenue }}</b></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const allSessionBids = {{ all_session_bids|json }};
+    const allSessionRevenuesByRound = {{ all_session_revenues_by_round|json }};
+
+    // Chart 1: Average bidding behavior
+    const bidDatasets = allSessionBids.map(d => ({
+        label: `S${d.session_no} (${d.price_rule}, ${d.matching}, chat=${d.chat})`,
+        data: d.data,
+        borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
+        backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
+        tension: 0.25,
+        spanGaps: true,
+        fill: false
+    }));
+
+    const labels = Array.from({length: 10}, (_, i) => `${i*10}–${i*10+9}`);
+
+    new Chart(document.getElementById('allSessionsBids'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: bidDatasets
+        },
+        options: {
+            scales: {
+                y: {
+                    title: { display: true, text: 'Average bid' }
+                },
+                x: {
+                    title: { display: true, text: 'Valuation bucket' }
+                }
+            }
+        }
+    });
+
+    // Chart 2: Average revenue by round
+    const revenueDatasets = allSessionRevenuesByRound.map(d => ({
+        label: `S${d.session_no}`,
+        data: d.data,
+        borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
+        backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
+        tension: 0.25,
+        fill: false
+    }));
+    
+    const revenueLabels = Array.from({length: 10}, (_, i) => `Round ${i+1}`);
+    
+    new Chart(document.getElementById('allSessionsRevenue'), {
+        type: 'line',
+        data: {
+            labels: revenueLabels,
+            datasets: revenueDatasets
+        },
+        options: {
+            scales: {
+                y: {
+                    title: { display: true, text: 'Average revenue' }
+                },
+                x: {
+                    title: { display: true, text: 'Round' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
