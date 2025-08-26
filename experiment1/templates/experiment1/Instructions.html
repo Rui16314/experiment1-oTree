@@ -1,19 +1,46 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
-
 {% block page_title %}Instructions{% endblock %}
 
 {% block page_body %}
-  {% include "experiment1/Instructions_General.html" %}
 
-  {% if session_no == 1 %}{% include "experiment1/Instructions_S1_First.html" %}
-  {% elif session_no == 2 %}{% include "experiment1/Instructions_S2_FirstRepeated.html" %}
-  {% elif session_no == 3 %}{% include "experiment1/Instructions_S3_FirstRepeated_Chat.html" %}
-  {% elif session_no == 4 %}{% include "experiment1/Instructions_S4_Second.html" %}
-  {% elif session_no == 5 %}{% include "experiment1/Instructions_S5_SecondRepeated.html" %}
-  {% else %}{% include "experiment1/Instructions_S6_SecondRepeated_Chat.html" %}
+<div class="callout">
+  <h3>GENERAL INSTRUCTIONS</h3>
+  <p>
+    Each part has three sessions. In every session you will play
+    <b>10 rounds</b> of an auction game (total 60 rounds). After learning your valuation,
+    you have <b>1 minute</b> to submit a bid. If you don’t submit a bid in time,
+    you receive <b>0 points</b> for that round.
+  </p>
+</div>
+
+{% if price_rule == 'first' %}
+  <h3>SESSION {{ session_no }}: FIRST-PRICE SEALED-BID AUCTION</h3>
+{% else %}
+  <h3>SESSION {{ session_no }}: SECOND-PRICE SEALED-BID AUCTION</h3>
+{% endif %}
+
+<div class="callout">
+  <p>You will play <b>10 rounds</b> in this session.</p>
+  <ul>
+    <li><b>Matching:</b>
+      {% if matching == 'random' %} <i>random</i> — your opponent changes each round.
+      {% else %} <i>fixed</i> — you remain paired with the same opponent for all 10 rounds.
+      {% endif %}
+    </li>
+    <li><b>Valuations:</b> independent and uniform from 0 to 100 (in cents).</li>
+    {% if price_rule == 'first' %}
+      <li><b>Payoff if you win:</b> your valuation − your bid. If you lose: 0.</li>
+    {% else %}
+      <li><b>Payoff if you win:</b> your valuation − your opponent’s bid. If you lose: 0.</li>
+    {% endif %}
+    <li><b>Ties:</b> broken at random.</li>
+  </ul>
+
+  {% if chat %}
+    <p><b>Communication:</b> You may communicate with your opponent in the chat <u>before</u> submitting your bid. Keep your identity confidential.</p>
   {% endif %}
+</div>
 
-  <div class="mt-3">{% next_button %}</div>
+<div class="mt-3">{% next_button %}</div>
 {% endblock %}
 
