@@ -1,113 +1,64 @@
 # experiment1/pages.py
 from otree.api import *
-from .models import C, set_payoffs, session_and_round_in_session, rules_for_round
-from .models import ChatMessage, chat_history_for   # NEW
-import time                                         # NEW
-
-
-def _session_and_round(rn: int):
-    return session_and_round_in_session(rn)
+from .models import (
+    C, Subsession, Group, Player,
+    phase_and_round_in_session, rules_for_round, set_payoffs
+)
 
 
 class Instructions(Page):
-    @staticmethod
-    def is_displayed(player: Player):
-        return player.round_number in (1, 11, 21, 31, 41, 51)
+    """Show once at the start of each 10-round session, not every round."""
+    def is_displayed(self):
+        _, r_in_s = phase_and_round_in_session(self.round_number)
+        return r_in_s == 1
 
-    @staticmethod
-    def vars_for_template(player: Player):
-        s_no, r_in_s = _session_and_round(player.round_number)
-        return dict(session_no=s_no, round_in_session=r_in_s)
-
-
-class ChatBid(Page):  # NEW
-    """Bid page WITH live chat — shows only in Sessions 3 & 6."""
-    form_model = 'player'
-    form_fields = ['bid']
-    timeout_seconds = 60
-    live_method = 'live_chat'
-
-    @staticmethod
-    def is_displayed(player: Player):
-        return rules_for_round(player.round_number)['chat']  # True in sessions 3 & 6
-
-    @staticmethod
-    def vars_for_template(player: Player):
-        s_no, r_in_s = _session_and_round(player.round_number)
+    def vars_for_template(self):
+        s_no, r_in_s = phase_and_round_in_session(self.round_number)
+        r = rules_for_round(self.round_number)
         return dict(
             session_no=s_no,
             round_in_session=r_in_s,
-            valuation=player.valuation,
-            my_id=player.id_in_group,
+            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+            price_rule=r['price_rule'],    # 'first' or 'second'
+            matching=r['matching'],        # 'random' or 'fixed'
+            chat=r['chat'],                # True/False
         )
-
-    # live handler for chat
-    def live_chat(self, data):
-        kind = data.get('type')
-        if kind == 'join':
-            # send existing history only to the joiner
-            return {
-                self.id_in_group: {
-                    'kind': 'history',
-                    'items': chat_history_for(self.group),
-                }
-            }
-        if kind == 'msg':
-            text = (data.get('text') or '').strip()
-            if not text:
-                return
-            ChatMessage.create(
-                group=self.group,
-                sender_id_in_group=self.player.id_in_group,
-                text=text,
-                ts=time.time(),  # timestamp here -> needs import time
-            )
-            # broadcast to both players on the page
-            return {0: {'kind': 'message', 'sid': self.player.id_in_group, 'text': text}}
 
 
 class Bid(Page):
-    """Bid page WITHOUT chat — shows in sessions 1,2,4,5."""
     form_model = 'player'
     form_fields = ['bid']
-    timeout_seconds = 60
 
-    @staticmethod
-    def is_displayed(player: Player):
-        return not rules_for_round(player.round_number)['chat']
+    def get_timeout_seconds(self):
+        # 60-second limit (adjust if needed)
+        return 60
 
-    @staticmethod
-    def vars_for_template(player: Player):
-        s_no, r_in_s = _session_and_round(player.round_number)
-        return dict(
-            session_no=s_no,
-            round_in_session=r_in_s,
-            valuation=player.valuation
-        )
+    def before_next_page(self, timeout_happened):
+        # Auto-bid rule: if time runs out, set bid = valuation/2
+        if timeout_happened and self.player.field_maybe_none('bid') is None:
+            self.player.bid = self.player.valuation / 2
 
 
-class ComputeResults(WaitPage):
+class ResultsWait(WaitPage):
     after_all_players_arrive = set_payoffs
 
 
 class Results(Page):
-    @staticmethod
-    def vars_for_template(player: Player):
-        s_no, r_in_s = _session_and_round(player.round_number)
-        opp = player.get_others_in_group()[0]
-        g = player.group
-        you_won = (g.winner_id_in_group == player.id_in_group)
+    def vars_for_template(self):
+        s_no, r_in_s = phase_and_round_in_session(self.round_number)
+        opp = self.player.get_others_in_group()[0]
         return dict(
             session_no=s_no,
             round_in_session=r_in_s,
-            your_bid=player.bid if player.bid is not None else cu(0),
-            opp_bid=opp.bid if opp.bid is not None else cu(0),
-            price=g.price,
-            valuation=player.valuation,
-            you_won=you_won,
+            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+            valuation=self.player.valuation,
+            your_bid=self.player.field_maybe_none('bid'),
+            opp_bid=opp.field_maybe_none('bid'),
+            price=self.group.price,
+            you_won=(self.group.winner_id_in_group == self.player.id_in_group),
         )
 
 
-page_sequence = [Instructions, ChatBid, Bid, ComputeResults, Results]
+page_sequence = [Instructions, Bid, ResultsWait, Results]
 
 
