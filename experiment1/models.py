@@ -2,11 +2,13 @@
 from otree.api import *
 from random import randint, choice
 
+
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
-    NUM_ROUNDS = 60
+
     ROUNDS_PER_SESSION = 10
+    NUM_ROUNDS = 6 * ROUNDS_PER_SESSION  # 6 sessions total
 
 
 class Subsession(BaseSubsession):
@@ -15,67 +17,80 @@ class Subsession(BaseSubsession):
 
 class Group(BaseGroup):
     price = models.CurrencyField(initial=cu(0))
-    winner_id_in_group = models.IntegerField(initial=0)
+    winner_id_in_group = models.IntegerField()
 
 
 class Player(BasePlayer):
-    valuation = models.CurrencyField()
-    bid = models.CurrencyField(min=0, max=100, blank=True)
+    valuation = models.CurrencyField()                       # 0–100
+    bid = models.CurrencyField(min=0, max=100, blank=True)   # may be blank if timeout
 
 
-# ---------------- helpers ----------------
+# ----------------- helpers -----------------
 
-def phase_and_round_in_session(rn: int):
-    """returns (session_no 1..6, round_in_session 1..10)"""
-    session_no = (rn - 1) // C.ROUNDS_PER_SESSION + 1
-    round_in_session = (rn - 1) % C.ROUNDS_PER_SESSION + 1
-    return session_no, round_in_session
+def session_no_and_round_in_session(round_number: int):
+    """Return (session_no 1..6, round_in_session 1..10)."""
+    s = (round_number - 1) // C.ROUNDS_PER_SESSION + 1
+    r = (round_number - 1) % C.ROUNDS_PER_SESSION + 1
+    return s, r
 
 
-def rules_for_round(rn: int):
-    """Rules that apply in a given round."""
-    s, _ = phase_and_round_in_session(rn)
-    price_rule = 'first' if s <= 3 else 'second'
+def rules_for_round(round_number: int):
+    """
+    Returns a dict with:
+      price_rule: 'first' | 'second'
+      matching:   'random' | 'fixed'
+      chat:       bool
+    Sessions:
+      1: first / random / no chat
+      2: first / fixed  / no chat
+      3: first / fixed  / chat
+      4: second / random / no chat
+      5: second / fixed  / no chat
+      6: second / fixed  / chat
+    """
+    s, _ = session_no_and_round_in_session(round_number)
+    price = 'first' if s <= 3 else 'second'
     matching = 'random' if s in (1, 4) else 'fixed'
     chat = s in (3, 6)
-    return dict(price_rule=price_rule, matching=matching, chat=chat)
+    return dict(price_rule=price, matching=matching, chat=chat)
 
 
-# --------------- oTree hooks ----------------
+def random_valuation():
+    # uniform 0–100 with 2 decimals
+    return cu(randint(0, 10000)) / 100
+
+
+# ----------------- oTree hooks -----------------
 
 def creating_session(subsession: Subsession):
-    """Group players & draw valuations each round."""
-    s, ris = phase_and_round_in_session(subsession.round_number)
-    r = rules_for_round(subsession.round_number)
+    """Group players and draw valuations each round."""
+    rules = rules_for_round(subsession.round_number)
+    s, r_in_s = session_no_and_round_in_session(subsession.round_number)
 
-    if r['matching'] == 'random':
+    if rules['matching'] == 'random':
         subsession.group_randomly()
     else:
-        # fixed partner within the 10-round session block
+        # fixed opponents within each 10-round block
         base_round = (s - 1) * C.ROUNDS_PER_SESSION + 1
-        if ris == 1:
-            subsession.group_randomly()          # choose pairs at start of session
+        if r_in_s == 1:
+            subsession.group_randomly()  # choose pairs at the start of the block
         else:
             subsession.group_like_round(base_round)
 
-    # fresh valuations every round
+    # draw valuations for all players every round
     for p in subsession.get_players():
-        p.valuation = cu(randint(0, 10000)) / 100
+        p.valuation = random_valuation()
 
 
-def set_payoffs(group: Group):
-    """Compute price & payoffs after both bids are in, defensively handling null bids."""
+# do the payoff computation on Group so we can call it from a WaitPage
+def set_group_payoffs(group: Group):
     p1, p2 = group.get_players()
 
-    # IMPORTANT: use field_maybe_none to avoid the "null field" exception
-    b1 = p1.field_maybe_none('bid')
-    b2 = p2.field_maybe_none('bid')
-    if b1 is None:
-        b1 = cu(0)
-    if b2 is None:
-        b2 = cu(0)
+    # in case of timeouts / no entry, treat missing bids as 0
+    b1 = p1.bid if p1.bid is not None else cu(0)
+    b2 = p2.bid if p2.bid is not None else cu(0)
 
-    # winner/loser (break ties at random)
+    # winner/loser (ties broken randomly)
     if b1 > b2:
         winner, loser = p1, p2
     elif b2 > b1:
@@ -84,15 +99,14 @@ def set_payoffs(group: Group):
         winner = choice([p1, p2])
         loser = p1 if winner is p2 else p2
 
+    # first-price vs second-price
     price_rule = rules_for_round(group.round_number)['price_rule']
-    # again, get bid safely (may be None)
-    wbid = winner.field_maybe_none('bid') or cu(0)
-    lbid = loser.field_maybe_none('bid') or cu(0)
-    price = lbid if price_rule == 'second' else wbid
+    price = winner.bid if price_rule == 'first' else loser.bid
 
     group.price = price
     group.winner_id_in_group = winner.id_in_group
 
+    # payoffs
     winner.payoff = max(cu(0), winner.valuation - price)
     loser.payoff = cu(0)
 
