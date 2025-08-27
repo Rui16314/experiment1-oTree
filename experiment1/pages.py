@@ -1,87 +1,134 @@
 # experiment1/pages.py
 from otree.api import *
-import json
+from .models import C, rules_for_round, session_no_and_round_in_session, set_group_payoffs
 
-from .models import (
-    C, Subsession, Group, Player,
-    phase_and_round_in_session, rules_for_round, set_payoffs
-)
+INSTRUCTION_TEMPLATES = {
+    1: 'experiment1/Instructions_S1_First.html',
+    2: 'experiment1/Instructions_S2_FirstRepeated.html',
+    3: 'experiment1/Instructions_S3_FirstRepeated_Chat.html',
+    4: 'experiment1/Instructions_S4_Second.html',
+    5: 'experiment1/Instructions_S5_SecondRepeated.html',
+    6: 'experiment1/Instructions_S6_SecondRepeated_Chat.html',
+}
 
+class Instructions(Page):
+    def is_displayed(self):
+        _, r_in_s = session_no_and_round_in_session(self.round_number)
+        return r_in_s == 1
 
-# ---------- Common mixin to expose round/session info ----------
+    def get_template_name(self):
+        s_no, _ = session_no_and_round_in_session(self.round_number)
+        return INSTRUCTION_TEMPLATES.get(s_no, 'experiment1/Instructions.html')
 
-class RoundInfo:
+class Bid(Page):
+    form_model = 'player'
+    form_fields = ['bid']
+    timeout_seconds = 60
+
+    def live_method(self, data):
+        text = (data or {}).get('text', '').strip()
+        if not text:
+            return
+        return {0: dict(sender=self.player.id_in_group, text=text)}
+
     def vars_for_template(self):
-        s_no, r_in_s = phase_and_round_in_session(self.round_number)
-        ctx = dict(
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        rules = rules_for_round(self.round_number)
+        return dict(
             session_no=s_no,
             round_in_session=r_in_s,
             ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+            valuation=self.player.valuation,
+            chat_enabled=rules['chat'],
         )
-        # add valuation where available (safe if present)
-        if hasattr(self, 'player') and self.player.valuation is not None:
-            ctx['valuation'] = self.player.valuation
-        # human-readable price rule
-        ctx['price_rule'] = 'first-price' if rules_for_round(self.round_number)['price'] == 'first' else 'second-price'
-        return ctx
 
+    def before_next_page(self, timeout_happened):
+        if timeout_happened and self.player.bid is None:
+            self.player.bid = cu(0)
 
-# ---------- Chat (live) support ----------
+class ResultsWaitPage(WaitPage):
+    title_text = "Please wait"
+    body_text = "Waiting for the other participant."
+    after_all_players_arrive = set_group_payoffs
 
-def live_chat(player: Player, data):
-    """data expected as {'text': '...'}"""
-    g: Group = player.group
-    try:
-        arr = json.loads(g.chat_history)
-    except Exception:
-        arr = []
-    msg = dict(pid=player.id_in_group, text=(data or {}).get('text', ''))
-    if msg['text'].strip():
-        arr.append(msg)
-        g.chat_history = json.dumps(arr)
-    # broadcast updated history to both players
-    return {p.id_in_group: arr for p in g.get_players()}
+class Results(Page):
+    def vars_for_template(self):
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        other = self.player.get_others_in_group()[0]
+        you_won = self.group.winner_id_in_group == self.player.id_in_group
+        return dict(
+            session_no=s_no,
+            round_in_session=r_in_s,
+            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+            your_bid=self.player.bid,
+            opp_bid=other.bid,
+            valuation=self.player.valuation,
+            price=self.group.price,
+            you_won=you_won,
+        )
 
-
-# ---------- Pages ----------
-
-class Instructions(RoundInfo, Page):
+class SessionSummary(Page):
     def is_displayed(self):
-        # only first round of each 10-round session
-        _, ris = phase_and_round_in_session(self.round_number)
-        return ris == 1
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        return r_in_s == C.ROUNDS_PER_SESSION and s_no < 6
 
+    def vars_for_template(self):
+        pass
 
-class Chat(RoundInfo, Page):
-    live_method = live_chat
-
+class FinalResults(Page):
     def is_displayed(self):
-        return rules_for_round(self.round_number)['chat']
+        return self.round_number == C.NUM_ROUNDS
 
-    @staticmethod
-    def js_vars(player: Player):
-        return dict(my_id=player.id_in_group)
+    def vars_for_template(self):
+        all_players = self.session.get_players()
+        all_groups = self.session.get_groups()
+        all_sessions_bids = []
+        all_session_revenues_by_round = []
+        all_session_revenues = []
 
-
-class Bid(RoundInfo, Page):
-    form_model = 'player'
-    form_fields = ['bid']
-
-    # 60-second timer
-    timeout_seconds = 60
-
-    def is_displayed(self):
-        # bidding every round
-        return True
-
-
-class WaitForBoth(WaitPage):
-    after_all_players_arrive = set_payoffs
-
-
-class Results(RoundInfo, Page):
-    pass
-
-
-page_sequence = [Instructions, Chat, Bid, WaitForBoth, Results]
-
+        for s_no in range(1, 7):
+            session_players = [p for p in all_players if session_no_and_round_in_session(p.round_number)[0] == s_no]
+            session_groups = [g for g in all_groups if session_no_and_round_in_session(g.round_number)[0] == s_no]
+            valuations = [p.valuation for p in session_players]
+            bids = [p.bid for p in session_players]
+            bins = [[] for _ in range(10)]
+            for v, b in zip(valuations, bids):
+                if b is not None:
+                    bin_index = min(int(v // 10), 9)
+                    bins[bin_index].append(b)
+            avg_bids = [sum(b) / len(b) if len(b) > 0 else None for b in bins]
+            rules = rules_for_round((s_no - 1) * C.ROUNDS_PER_SESSION + 1)
+            all_sessions_bids.append({
+                'session_no': s_no,
+                'price_rule': rules['price_rule'],
+                'matching': rules['matching'],
+                'chat': rules['chat'],
+                'data': avg_bids
+            })
+            revenues_by_round = []
+            for r_in_s in range(1, 11):
+                round_groups = [g for g in session_groups if session_no_and_round_in_session(g.round_number)[1] == r_in_s]
+                revenues = [g.price for g in round_groups]
+                if revenues:
+                    revenues_by_round.append(sum(revenues) / len(revenues))
+                else:
+                    revenues_by_round.append(None)
+            all_session_revenues_by_round.append({
+                'session_no': s_no,
+                'data': revenues_by_round
+            })
+            all_revenues = [g.price for g in session_groups]
+            avg_revenue = sum(all_revenues) / len(all_revenues) if len(all_revenues) > 0 else 0
+            all_session_revenues.append({
+                'session_no': s_no,
+                'price_rule': rules['price_rule'],
+                'matching': rules['matching'],
+                'chat': rules['chat'],
+                'avg_revenue': avg_revenue
+            })
+        return dict(
+            all_session_bids=all_sessions_bids,
+            all_session_revenues_by_round=all_session_revenues_by_round,
+            all_session_revenues=all_session_revenues
+        )
+page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
