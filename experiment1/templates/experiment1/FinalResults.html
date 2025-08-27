@@ -30,10 +30,14 @@
     {% for s in all_session_revenues %}
         <tr>
             <td>{{ s.session_no }}</td>
-            <td>{{ s.price_rule }}</td>
-            <td>{{ s.matching }}</td>
+            <td>{{ s.price_rule|default:"N/A" }}</td>
+            <td>{{ s.matching|default:"N/A" }}</td>
             <td>{% if s.chat %}Yes{% else %}No{% endif %}</td>
-            <td><b>{{ s.avg_revenue }}</b></td>
+            <td><b>{{ s.avg_revenue|default:0 }}</b></td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No data available</td>
         </tr>
     {% endfor %}
     </tbody>
@@ -44,68 +48,72 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const allSessionBids = {{ all_session_bids|json }};
-    const allSessionRevenuesByRound = {{ all_session_revenues_by_round|json }};
+    const allSessionBids = {{ all_session_bids|jsonify|default:"[]" }};
+    const allSessionRevenuesByRound = {{ all_session_revenues_by_round|jsonify|default:"[]" }};
 
     // Chart 1: Average bidding behavior
-    const bidDatasets = allSessionBids.map(d => ({
-        label: `S${d.session_no} (${d.price_rule}, ${d.matching}, chat=${d.chat})`,
-        data: d.data,
-        borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
-        backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
-        tension: 0.25,
-        spanGaps: true,
-        fill: false
-    }));
+    if (allSessionBids.length > 0) {
+        const bidDatasets = allSessionBids.map(d => ({
+            label: `S${d.session_no} (${d.price_rule}, ${d.matching}, chat=${d.chat})`,
+            data: d.data,
+            borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
+            backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
+            tension: 0.25,
+            spanGaps: true,
+            fill: false
+        }));
 
-    const labels = Array.from({length: 10}, (_, i) => `${i*10}–${i*10+9}`);
+        const labels = Array.from({length: 10}, (_, i) => `${i*10}–${i*10+9}`);
 
-    new Chart(document.getElementById('allSessionsBids'), {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: bidDatasets
-        },
-        options: {
-            scales: {
-                y: {
-                    title: { display: true, text: 'Average bid' }
-                },
-                x: {
-                    title: { display: true, text: 'Valuation bucket' }
+        new Chart(document.getElementById('allSessionsBids'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: bidDatasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Average bid' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Valuation bucket' }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     // Chart 2: Average revenue by round
-    const revenueDatasets = allSessionRevenuesByRound.map(d => ({
-        label: `S${d.session_no}`,
-        data: d.data,
-        borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
-        backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
-        tension: 0.25,
-        fill: false
-    }));
-    
-    const revenueLabels = Array.from({length: 10}, (_, i) => `Round ${i+1}`);
-    
-    new Chart(document.getElementById('allSessionsRevenue'), {
-        type: 'line',
-        data: {
-            labels: revenueLabels,
-            datasets: revenueDatasets
-        },
-        options: {
-            scales: {
-                y: {
-                    title: { display: true, text: 'Average revenue' }
-                },
-                x: {
-                    title: { display: true, text: 'Round' }
+    if (allSessionRevenuesByRound.length > 0) {
+        const revenueDatasets = allSessionRevenuesByRound.map(d => ({
+            label: `S${d.session_no}`,
+            data: d.data,
+            borderColor: `hsl(${d.session_no * 60}, 70%, 50%)`,
+            backgroundColor: `hsla(${d.session_no * 60}, 70%, 50%, 0.2)`,
+            tension: 0.25,
+            fill: false
+        }));
+        
+        const revenueLabels = Array.from({length: 10}, (_, i) => `Round ${i+1}`);
+        
+        new Chart(document.getElementById('allSessionsRevenue'), {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: revenueDatasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Average revenue' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Round' }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 </script>
 {% endblock %}
