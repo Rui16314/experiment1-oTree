@@ -1,30 +1,36 @@
-{% load otree static %}
-<!doctype html>
+{% load otree static %}<!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>{% block title %}Experiment 1{% endblock %}</title>
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}{% block page_title %}{% endblock %}{% endblock %}</title>
 
-    <!-- Your stylesheet – stays at experiment1/static/instructions.css -->
-    <link rel="stylesheet" href="{% static 'instructions.css' %}">
-    <style>
-      /* a couple of tiny helpers so you don't need to touch your CSS file */
-      .muted { color: #6c757d; }
-      .alert { padding:.75rem 1rem; border-radius:.5rem; background:#f5f5f5; }
-      .alert.success { background:#d9f0e2; }
-      .chat {
-        border:1px solid #ddd;border-radius:.5rem; padding: .5rem; margin:1rem 0;
-      }
-      .chat-messages {
-        height: 180px; overflow-y: auto; border:1px solid #eee; padding:.5rem; margin-bottom:.5rem;
-        background:#fff;
-      }
-      .chat-row { margin: .25rem 0; }
-      .chat-me { font-weight:600; }
-    </style>
-  </head>
-  <body>
-    <h2>{% block page_title %}{% endblock %}</h2>
-    {% block page_body %}{% endblock %}
-  </body>
+  {# Your CSS stays at experiment1/static/instructions.css #}
+  <link rel="stylesheet" href="{% static 'instructions.css' %}">
+  <style>
+    /* small safe defaults if your CSS is empty */
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.45; }
+    .muted { color:#666; }
+    .alert { padding: .75rem 1rem; background:#eee; border-radius:8px; }
+    .alert.success { background:#d8f5d0; }
+    .callout { background:#f7f7fb; padding:1rem 1.25rem; border-radius:10px; }
+    .page { max-width: 900px; margin: 24px auto; }
+    .timer { margin: 12px 0; padding: .5rem; background: #fff6d6; border-radius: 8px; }
+    .mt-2 { margin-top: .5rem; } .mt-3 { margin-top: 1rem; } .mb-2 { margin-bottom: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    {% if timeout_seconds %}
+      <div class="timer">
+        Time left to complete this page: {{ timeout_seconds_display }}
+      </div>
+    {% endif %}
+
+    {# IMPORTANT: single form around page body so {% next_button %} submits #}
+    <form method="post">
+      {% csrf_token %}
+      {% block page_body %}{% endblock %}
+    </form>
+  </div>
+</body>
 </html>
