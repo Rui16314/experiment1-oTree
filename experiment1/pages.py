@@ -1,6 +1,6 @@
-# experiment1/pages.py
+# pages.py
 from otree.api import *
-from .models import C, rules_for_round, session_no_and_round_in_session, set_group_payoffs
+from .models import C, rules_for_round, session_no_and_round_in_session
 
 
 class Instructions(Page):
@@ -55,6 +55,7 @@ class ResultsWaitPage(WaitPage):
     body_text = "Waiting for the other participant."
     after_all_players_arrive = 'set_payoffs'
 
+
 class Results(Page):
     def vars_for_template(self):
         s_no, r_in_s = session_no_and_round_in_session(self.round_number)
@@ -100,17 +101,15 @@ class FinalResults(Page):
             session_players = [p for p in all_players if session_no_and_round_in_session(p.round_number)[0] == s_no]
             session_groups = [g for g in all_groups if session_no_and_round_in_session(g.round_number)[0] == s_no]
             
-            # 1) Average Bidding Behavior
             valuations = [p.valuation for p in session_players]
             bids = [p.bid for p in session_players]
             
-            bins = [[] for _ in range(10)]  # Changed to 10 bins (0-90) to match image
+            bins = [[] for _ in range(10)]
             for v, b in zip(valuations, bids):
                 if b is not None:
                     bin_index = min(int(v // 10), 9)
                     bins[bin_index].append(b)
 
-            # Corrected logic to prevent division by zero
             avg_bids = [sum(b) / len(b) if len(b) > 0 else None for b in bins]
             
             rules = rules_for_round((s_no - 1) * C.ROUNDS_PER_SESSION + 1)
@@ -122,7 +121,6 @@ class FinalResults(Page):
                 'data': avg_bids
             })
 
-            # 2) Average revenue by round
             revenues_by_round = []
             for r_in_s in range(1, 11):
                 round_groups = [g for g in session_groups if session_no_and_round_in_session(g.round_number)[1] == r_in_s]
@@ -136,7 +134,6 @@ class FinalResults(Page):
                 'data': revenues_by_round
             })
             
-            # 3) Overall Average Revenue
             all_revenues = [g.price for g in session_groups]
             avg_revenue = sum(all_revenues) / len(all_revenues) if len(all_revenues) > 0 else 0
             all_session_revenues.append({
