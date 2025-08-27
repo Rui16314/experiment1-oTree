@@ -71,9 +71,6 @@ class Results(Page):
             you_won=you_won,
         )
 
-
-
-
 # ... (existing classes like Instructions, Bid, ResultsWaitPage, Results) ...
 
 class SessionSummary(Page):
@@ -83,6 +80,8 @@ class SessionSummary(Page):
 
     def vars_for_template(self):
         # ... (logic to generate data for single session summary) ...
+        # This part of the code is not provided, but the logic should be similar to
+        # the FinalResults class, but scoped to the current subsession.
         pass
 
 
@@ -91,15 +90,15 @@ class FinalResults(Page):
         return self.round_number == C.NUM_ROUNDS
 
     def vars_for_template(self):
-        # Data aggregation from all sessions
-        all_players = self.subsession.in_rounds(1, C.NUM_ROUNDS).get_players()
+        all_players = self.session.get_players()
+        all_groups = self.session.get_groups()
         all_sessions_bids = []
         all_session_revenues_by_round = []
         all_session_revenues = []
 
         for s_no in range(1, 7):
             session_players = [p for p in all_players if session_no_and_round_in_session(p.round_number)[0] == s_no]
-            session_groups = [g for g in self.subsession.in_rounds(1, C.NUM_ROUNDS).get_groups() if session_no_and_round_in_session(g.round_number)[0] == s_no]
+            session_groups = [g for g in all_groups if session_no_and_round_in_session(g.round_number)[0] == s_no]
             
             # 1) Average Bidding Behavior
             valuations = [p.valuation for p in session_players]
@@ -155,3 +154,5 @@ class FinalResults(Page):
 
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
+
+
