@@ -1,4 +1,4 @@
-otree==5.9.0
+otree==5.10.0
 sentry-sdk
 psycopg2-binary
 uvicorn
