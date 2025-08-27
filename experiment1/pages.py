@@ -100,7 +100,17 @@ class SessionSummary(Page):
         return r_in_s == C.ROUNDS_PER_SESSION and s_no < 6
 
     def vars_for_template(self):
-        pass
+        # You need to implement the logic to calculate these variables
+        # based on the current session's data
+        return {
+            'avg_at_50': None,  # Replace with actual calculation
+            'avg_30_39': None,  # Replace with actual calculation
+            'bucket_x': [],     # Replace with actual data
+            'bucket_y': [],     # Replace with actual data
+            'rev_by_round': [], # Replace with actual data
+            'per_player': [],   # Replace with actual data
+            'rev_overall': None # Replace with actual calculation
+        }
 
 class FinalResults(Page):
     def is_displayed(self):
