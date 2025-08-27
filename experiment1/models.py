@@ -46,9 +46,7 @@ def rules_for_round(round_number: int):
     matching = 'random' if s in (1, 4) else 'fixed'
     chat = s in (3, 6)
     return dict(price=price, matching=matching, chat=chat)
-
-
-def _draw_valuation() -> Currency:
+def _draw_valuation():
     """
     Uniform 0..100, two decimals.
     (randint gives an int in cents; divide by 100.)
