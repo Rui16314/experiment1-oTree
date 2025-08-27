@@ -21,7 +21,7 @@ class Subsession(BaseSubsession):
 
 class Group(BaseGroup):
     # Price actually paid by the winner in this round
-    price = models.CurrencyField(initial=cu(0))
+    price = CurrencyField(initial=cu(0))
     # Convenience: who won (1 or 2), 0 means not set yet
     winner_id_in_group = models.IntegerField(initial=0)
 
