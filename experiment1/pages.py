@@ -11,11 +11,23 @@ INSTRUCTION_TEMPLATES = {
     6: 'experiment1/Instructions_S6_SecondRepeated_Chat.html',
 }
 
+# Add the missing RoundInfo class
+class RoundInfo:
+    def vars_for_template(self):
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        rules = rules_for_round(self.round_number)
+        return {
+            'session_no': s_no,
+            'round_in_session': r_in_s,
+            'ROUNDS_PER_SESSION': C.ROUNDS_PER_SESSION,
+            'rules': rules
+        }
+
 class Instructions(RoundInfo, Page):
     def is_displayed(self):
         # only first round of each 10-round session
-        _, ris = phase_and_round_in_session(self.round_number)
-        return ris == 1
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        return r_in_s == 1
 
     def vars_for_template(self):
         ctx = super().vars_for_template()
@@ -30,7 +42,7 @@ class Instructions(RoundInfo, Page):
             6: 'experiment1/instructions/Instructions_S6_SecondRepeated_Chat.html',
         }
         ctx['session_partial'] = partial_map[s_no]
-        # Show “General Instructions” only before Session 1
+        # Show "General Instructions" only before Session 1
         ctx['show_general'] = (s_no == 1)
         return ctx
 
@@ -114,7 +126,7 @@ class FinalResults(Page):
             rules = rules_for_round((s_no - 1) * C.ROUNDS_PER_SESSION + 1)
             all_sessions_bids.append({
                 'session_no': s_no,
-                'price_rule': rules['price_rule'],
+                'price_rule': rules['price'],
                 'matching': rules['matching'],
                 'chat': rules['chat'],
                 'data': avg_bids
@@ -135,7 +147,7 @@ class FinalResults(Page):
             avg_revenue = sum(all_revenues) / len(all_revenues) if len(all_revenues) > 0 else 0
             all_session_revenues.append({
                 'session_no': s_no,
-                'price_rule': rules['price_rule'],
+                'price_rule': rules['price'],
                 'matching': rules['matching'],
                 'chat': rules['chat'],
                 'avg_revenue': avg_revenue
@@ -145,4 +157,5 @@ class FinalResults(Page):
             all_session_revenues_by_round=all_session_revenues_by_round,
             all_session_revenues=all_session_revenues
         )
+
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
