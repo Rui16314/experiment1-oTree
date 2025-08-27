@@ -1,5 +1,7 @@
 # experiment1/models.py
 from otree.api import *
+from otree.api import CurrencyField, models
+
 from random import randint, choice
 
 
