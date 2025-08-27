@@ -1,5 +1,5 @@
 # Your requirements.txt file
-otree
+otree==5.10.3
 sentry-sdk
 psycopg2-binary
 uvicorn
