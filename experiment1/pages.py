@@ -11,14 +11,28 @@ INSTRUCTION_TEMPLATES = {
     6: 'experiment1/Instructions_S6_SecondRepeated_Chat.html',
 }
 
-class Instructions(Page):
+class Instructions(RoundInfo, Page):
     def is_displayed(self):
-        _, r_in_s = session_no_and_round_in_session(self.round_number)
-        return r_in_s == 1
+        # only first round of each 10-round session
+        _, ris = phase_and_round_in_session(self.round_number)
+        return ris == 1
 
-    def get_template_name(self):
-        s_no, _ = session_no_and_round_in_session(self.round_number)
-        return INSTRUCTION_TEMPLATES.get(s_no, 'experiment1/Instructions.html')
+    def vars_for_template(self):
+        ctx = super().vars_for_template()
+        s_no = ctx['session_no']
+        # Map session -> partial file to include
+        partial_map = {
+            1: 'experiment1/instructions/Instructions_S1_First.html',
+            2: 'experiment1/instructions/Instructions_S2_FirstRepeated.html',
+            3: 'experiment1/instructions/Instructions_S3_FirstRepeated_Chat.html',
+            4: 'experiment1/instructions/Instructions_S4_Second.html',
+            5: 'experiment1/instructions/Instructions_S5_SecondRepeated.html',
+            6: 'experiment1/instructions/Instructions_S6_SecondRepeated_Chat.html',
+        }
+        ctx['session_partial'] = partial_map[s_no]
+        # Show “General Instructions” only before Session 1
+        ctx['show_general'] = (s_no == 1)
+        return ctx
 
 class Bid(Page):
     form_model = 'player'
