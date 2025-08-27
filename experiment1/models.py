@@ -1,34 +1,25 @@
 # experiment1/models.py
-from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, cu
-from otree.db import models  # Changed this import
+from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, cu, models
 from random import randint, choice
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
     PLAYERS_PER_GROUP = 2
-
-    # 6 sessions × 10 rounds each
     ROUNDS_PER_SESSION = 10
     NUM_SESSIONS = 6
     NUM_ROUNDS = ROUNDS_PER_SESSION * NUM_SESSIONS
 
-
 class Subsession(BaseSubsession):
     pass
 
-
 class Group(BaseGroup):
-    # Price actually paid by the winner in this round
     price = models.CurrencyField(initial=cu(0))
-    # Convenience: who won (1 or 2), 0 means not set yet
     winner_id_in_group = models.IntegerField(initial=0)
 
-
 class Player(BasePlayer):
-    # Private valuation (0–100, two decimals)
     valuation = models.CurrencyField()
-    # Bid (allow blank so timeouts don't crash; we'll treat None as 0)
     bid = models.CurrencyField(min=0, max=100, blank=True)
+
 
 
 # -------------------- helpers about sessions/rules --------------------
