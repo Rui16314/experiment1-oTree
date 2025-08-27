@@ -85,7 +85,7 @@ def creating_session(subsession: Subsession):
 def set_group_payoffs(group: Group):
     p1, p2 = group.get_players()
 
-    # In case of timeouts, treat missing bids as 0, which aligns with instructions.
+    # In case of timeouts, treat missing bids as 0.
     b1 = p1.bid if p1.bid is not None else cu(0)
     b2 = p2.bid if p2.bid is not None else cu(0)
 
@@ -96,12 +96,12 @@ def set_group_payoffs(group: Group):
         # Tie-breaking rule from instructions
         winner = choice([p1, p2])
         loser = p1 if winner is p2 else p2
-
-        # The instructions state 'Your valuation - Your bid' for a tie in the first-price auction,
-        # which is inconsistent with the formula in the image. I'll use the formula in the image.
-        payoff = (winner.valuation - winner.bid) / 2
-        winner.payoff = payoff
-        loser.payoff = payoff
+        
+        # Corrected code to perform arithmetic on currency fields
+        payoff_value = (winner.valuation - winner.bid) / 2
+        winner.payoff = cu(payoff_value)
+        loser.payoff = cu(payoff_value)
+        
         group.price = winner.bid
         group.winner_id_in_group = winner.id_in_group
 
