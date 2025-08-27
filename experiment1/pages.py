@@ -156,5 +156,3 @@ class FinalResults(Page):
 
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
-
-
