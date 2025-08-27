@@ -5,6 +5,7 @@ from .models import C, rules_for_round, session_no_and_round_in_session, set_gro
 
 class Instructions(Page):
     """Shown only once at the beginning of each 10-round session."""
+
     def is_displayed(self):
         _, r_in_s = session_no_and_round_in_session(self.round_number)
         return r_in_s == 1
@@ -46,7 +47,6 @@ class Bid(Page):
 
     def before_next_page(self, timeout_happened):
         if timeout_happened and self.player.bid is None:
-            # Note: The instructions specify v/2 or v for bots, but this handles human timeouts.
             self.player.bid = cu(0)
 
 
@@ -54,6 +54,7 @@ class ResultsWaitPage(WaitPage):
     title_text = "Please wait"
     body_text = "Waiting for the other participant."
     after_all_players_arrive = set_group_payoffs
+
 
 class Results(Page):
     def vars_for_template(self):
@@ -71,7 +72,6 @@ class Results(Page):
             you_won=you_won,
         )
 
-# ... (existing classes like Instructions, Bid, ResultsWaitPage, Results) ...
 
 class SessionSummary(Page):
     def is_displayed(self):
@@ -90,8 +90,10 @@ class FinalResults(Page):
         return self.round_number == C.NUM_ROUNDS
 
     def vars_for_template(self):
+        # Correctly get all players and groups from the entire session
         all_players = self.session.get_players()
         all_groups = self.session.get_groups()
+
         all_sessions_bids = []
         all_session_revenues_by_round = []
         all_session_revenues = []
