@@ -8,7 +8,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 2
 
     ROUNDS_PER_SESSION = 10
-    NUM_ROUNDS = 6 * ROUNDS_PER_SESSION
+    NUM_ROUNDS = 6 * ROUNDS_PER_SESSION  # 6 sessions total
 
 
 class Subsession(BaseSubsession):
@@ -19,53 +19,10 @@ class Group(BaseGroup):
     price = models.CurrencyField(initial=cu(0))
     winner_id_in_group = models.IntegerField()
 
-    def set_payoffs(self):
-        p1, p2 = self.get_players()
-
-        # In case of timeouts, treat missing bids as 0.
-        b1 = p1.bid if p1.bid is not None else cu(0)
-        b2 = p2.bid if p2.bid is not None else cu(0)
-
-        rules = rules_for_round(self.round_number)
-        price_rule = rules['price_rule']
-
-        if b1 == b2:
-            # Tie-breaking rule from instructions
-            winner = choice([p1, p2])
-            loser = p1 if winner is p2 else p2
-            
-            payoff = (winner.valuation - winner.bid) / 2
-            winner.payoff = cu(payoff)
-            loser.payoff = cu(payoff)
-            
-            self.price = winner.bid
-            self.winner_id_in_group = winner.id_in_group
-
-        else:
-            # Normal win/loss
-            if b1 > b2:
-                winner, loser = p1, p2
-            else:
-                winner, loser = p2, p1
-
-            if price_rule == 'first':
-                # Winner's payoff is valuation - own bid
-                price = winner.bid
-                winner.payoff = winner.valuation - price
-                loser.payoff = cu(0)
-            else:
-                # Winner's payoff is valuation - opponent's bid
-                price = loser.bid
-                winner.payoff = winner.valuation - price
-                loser.payoff = cu(0)
-
-            self.price = price
-            self.winner_id_in_group = winner.id_in_group
-
 
 class Player(BasePlayer):
-    valuation = models.CurrencyField()
-    bid = models.CurrencyField(min=0, max=100, blank=True)
+    valuation = models.CurrencyField()                       # 0–100
+    bid = models.CurrencyField(min=0, max=100, blank=True)   # may be blank if timeout
 
 
 # ----------------- helpers -----------------
@@ -116,10 +73,39 @@ def creating_session(subsession: Subsession):
         # fixed opponents within each 10-round block
         base_round = (s - 1) * C.ROUNDS_PER_SESSION + 1
         if r_in_s == 1:
-            subsession.group_randomly()
+            subsession.group_randomly()  # choose pairs at the start of the block
         else:
             subsession.group_like_round(base_round)
 
     # draw valuations for all players every round
     for p in subsession.get_players():
         p.valuation = random_valuation()
+
+
+# do the payoff computation on Group so we can call it from a WaitPage
+def set_group_payoffs(group: Group):
+    p1, p2 = group.get_players()
+
+    # in case of timeouts / no entry, treat missing bids as 0
+    b1 = p1.bid if p1.bid is not None else cu(0)
+    b2 = p2.bid if p2.bid is not None else cu(0)
+
+    # winner/loser (ties broken randomly)
+    if b1 > b2:
+        winner, loser = p1, p2
+    elif b2 > b1:
+        winner, loser = p2, p1
+    else:
+        winner = choice([p1, p2])
+        loser = p1 if winner is p2 else p2
+
+    # first-price vs second-price
+    price_rule = rules_for_round(group.round_number)['price_rule']
+    price = winner.bid if price_rule == 'first' else loser.bid
+
+    group.price = price
+    group.winner_id_in_group = winner.id_in_group
+
+    # payoffs
+    winner.payoff = max(cu(0), winner.valuation - price)
+    loser.payoff = cu(0)
