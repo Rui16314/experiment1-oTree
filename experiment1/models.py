@@ -19,6 +19,49 @@ class Group(BaseGroup):
     price = models.CurrencyField(initial=cu(0))
     winner_id_in_group = models.IntegerField()
 
+    def set_payoffs(self):
+        p1, p2 = self.get_players()
+
+        # In case of timeouts, treat missing bids as 0.
+        b1 = p1.bid if p1.bid is not None else cu(0)
+        b2 = p2.bid if p2.bid is not None else cu(0)
+
+        rules = rules_for_round(self.round_number)
+        price_rule = rules['price_rule']
+
+        if b1 == b2:
+            # Tie-breaking rule from instructions
+            winner = choice([p1, p2])
+            loser = p1 if winner is p2 else p2
+            
+            payoff = (winner.valuation - winner.bid) / 2
+            winner.payoff = cu(payoff)
+            loser.payoff = cu(payoff)
+            
+            self.price = winner.bid
+            self.winner_id_in_group = winner.id_in_group
+
+        else:
+            # Normal win/loss
+            if b1 > b2:
+                winner, loser = p1, p2
+            else:
+                winner, loser = p2, p1
+
+            if price_rule == 'first':
+                # Winner's payoff is valuation - own bid
+                price = winner.bid
+                winner.payoff = winner.valuation - price
+                loser.payoff = cu(0)
+            else:
+                # Winner's payoff is valuation - opponent's bid
+                price = loser.bid
+                winner.payoff = winner.valuation - price
+                loser.payoff = cu(0)
+
+            self.price = price
+            self.winner_id_in_group = winner.id_in_group
+
 
 class Player(BasePlayer):
     valuation = models.CurrencyField()
@@ -80,48 +123,3 @@ def creating_session(subsession: Subsession):
     # draw valuations for all players every round
     for p in subsession.get_players():
         p.valuation = random_valuation()
-
-
-def set_group_payoffs(group: Group):
-    p1, p2 = group.get_players()
-
-    # In case of timeouts, treat missing bids as 0.
-    b1 = p1.bid if p1.bid is not None else cu(0)
-    b2 = p2.bid if p2.bid is not None else cu(0)
-
-    rules = rules_for_round(group.round_number)
-    price_rule = rules['price_rule']
-
-    if b1 == b2:
-        # Tie-breaking rule from instructions
-        winner = choice([p1, p2])
-        loser = p1 if winner is p2 else p2
-        
-        # Corrected code to perform arithmetic on currency fields
-        payoff_value = (winner.valuation - winner.bid) / 2
-        winner.payoff = cu(payoff_value)
-        loser.payoff = cu(payoff_value)
-        
-        group.price = winner.bid
-        group.winner_id_in_group = winner.id_in_group
-
-    else:
-        # Normal win/loss
-        if b1 > b2:
-            winner, loser = p1, p2
-        else:
-            winner, loser = p2, p1
-
-        if price_rule == 'first':
-            # Winner's payoff is valuation - own bid
-            price = winner.bid
-            winner.payoff = winner.valuation - price
-            loser.payoff = cu(0)
-        else:
-            # Winner's payoff is valuation - opponent's bid
-            price = loser.bid
-            winner.payoff = winner.valuation - price
-            loser.payoff = cu(0)
-
-        group.price = price
-        group.winner_id_in_group = winner.id_in_group
