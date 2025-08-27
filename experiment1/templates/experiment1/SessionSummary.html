@@ -12,8 +12,12 @@
 <h4>1) Average bid by valuation (all players)</h4>
 <canvas id="avgByBucket" height="120"></canvas>
 <p class="small muted mt-1">
+  {% if avg_at_50 is not None %}
   • Mean bid at valuation 50 = <b>{{ avg_at_50 }}</b><br>
+  {% endif %}
+  {% if avg_30_39 is not None %}
   • Mean bid when valuation in [30, 39] = <b>{{ avg_30_39 }}</b>
+  {% endif %}
 </p>
 
 <h4 class="mt-4">2) Individual students: bid vs. valuation</h4>
@@ -23,67 +27,72 @@
 <canvas id="revByRound" height="120"></canvas>
 
 <h5 class="mt-2">4) Average revenue across all rounds</h5>
-<p><b>{{ rev_overall }}</b></p>
+<p><b>{{ rev_overall|default:"N/A" }}</b></p>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const bucketX = {{ bucket_x|json }};
-const bucketY = {{ bucket_y|json }};
-const revByRound = {{ rev_by_round|json }};
-const perPlayer = {{ per_player|json }};
+const bucketX = {{ bucket_x|jsonify|default:"[]" }};
+const bucketY = {{ bucket_y|jsonify|default:"[]" }};
+const revByRound = {{ rev_by_round|jsonify|default:"[]" }};
+const perPlayer = {{ per_player|jsonify|default:"[]" }};
 
 // 1) Average bid by valuation buckets
-new Chart(document.getElementById('avgByBucket'), {
-  type: 'line',
-  data: {
-    labels: bucketX.map(x => `${x}–${x+9}`),
-    datasets: [{ label: 'Average bid', data: bucketY, spanGaps: true, tension: 0.25 }]
-  },
-  options: { scales: { y: { title: { display: true, text: 'Average bid' } },
-                       x: { title: { display: true, text: 'Valuation bucket' } } } }
-});
+if (bucketX.length > 0 && bucketY.length > 0) {
+  new Chart(document.getElementById('avgByBucket'), {
+    type: 'line',
+    data: {
+      labels: bucketX.map(x => `${x}–${x+9}`),
+      datasets: [{ label: 'Average bid', data: bucketY, spanGaps: true, tension: 0.25 }]
+    },
+    options: { scales: { y: { title: { display: true, text: 'Average bid' } },
+                         x: { title: { display: true, text: 'Valuation bucket' } } } }
+  });
+}
 
 // 2) One chart per student
-const container = document.getElementById('perStudentCharts');
-perPlayer.forEach(s => {
-  const wrap = document.createElement('div');
-  wrap.style.marginBottom = '16px';
-  const title = document.createElement('div');
-  title.textContent = `Student ${s.label}`;
-  title.style.fontWeight = '600';
-  title.style.margin = '6px 0';
-  const canvas = document.createElement('canvas');
-  canvas.height = 120;
-  wrap.appendChild(title);
-  wrap.appendChild(canvas);
-  container.appendChild(wrap);
+if (perPlayer.length > 0) {
+  const container = document.getElementById('perStudentCharts');
+  perPlayer.forEach(s => {
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '16px';
+    const title = document.createElement('div');
+    title.textContent = `Student ${s.label}`;
+    title.style.fontWeight = '600';
+    title.style.margin = '6px 0';
+    const canvas = document.createElement('canvas');
+    canvas.height = 120;
+    wrap.appendChild(title);
+    wrap.appendChild(canvas);
+    container.appendChild(wrap);
 
-  new Chart(canvas, {
-    type: 'scatter',
-    data: { datasets: [{
-      label: 'Bid vs. valuation',
-      data: s.xs.map((x, i) => ({x, y: s.ys[i]})),
-      showLine: true, tension: 0.25
-    }]},
-    options: {
-      parsing: false,
-      scales: {
-        x: { title: { display: true, text: 'Valuation' }, min: 0, max: 100 },
-        y: { title: { display: true, text: 'Bid' } }
+    new Chart(canvas, {
+      type: 'scatter',
+      data: { datasets: [{
+        label: 'Bid vs. valuation',
+        data: s.xs.map((x, i) => ({x, y: s.ys[i]})),
+        showLine: true, tension: 0.25
+      }]},
+      options: {
+        parsing: false,
+        scales: {
+          x: { title: { display: true, text: 'Valuation' }, min: 0, max: 100 },
+          y: { title: { display: true, text: 'Bid' } }
+        }
       }
-    }
+    });
   });
-});
+}
 
 // 3) Average revenue by round
-new Chart(document.getElementById('revByRound'), {
-  type: 'bar',
-  data: { labels: revByRound.map((_, i) => `Round ${i+1}`),
-          datasets: [{ label: 'Avg winning price', data: revByRound }] },
-  options: { scales: { y: { title: { display: true, text: 'Price' } } } }
-});
+if (revByRound.length > 0) {
+  new Chart(document.getElementById('revByRound'), {
+    type: 'bar',
+    data: { labels: revByRound.map((_, i) => `Round ${i+1}`),
+            datasets: [{ label: 'Avg winning price', data: revByRound }] },
+    options: { scales: { y: { title: { display: true, text: 'Price' } } } }
+  });
+}
 </script>
 {% endblock %}
-
