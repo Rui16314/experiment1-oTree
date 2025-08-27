@@ -1,6 +1,7 @@
 # experiment1/models.py
 from otree.api import *
-from otree import models
+
+from otree.db import models
 from random import randint, choice
 
 
