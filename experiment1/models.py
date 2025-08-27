@@ -21,19 +21,16 @@ class Subsession(BaseSubsession):
 
 
 class Group(BaseGroup):
-    # Price actually paid by the winner in this round
-    price = CurrencyField(initial=cu(0))
-    # Convenience: who won (1 or 2), 0 means not set yet
-    winner_id_in_group = IntegerField(initial=0)
-
+    # Price actually paid by the winner in this round
+    price = models.CurrencyField(initial=cu(0))
+    # Convenience: who won (1 or 2), 0 means not set yet
+    winner_id_in_group = models.IntegerField(initial=0)
 
 class Player(BasePlayer):
-    # Private valuation (0–100, two decimals)
-    valuation = CurrencyField()
-    # Bid (allow blank so timeouts don’t crash; we’ll treat None as 0)
-    bid = CurrencyField(min=0, max=100, blank=True)
-
-
+    # Private valuation (0–100, two decimals)
+    valuation = models.CurrencyField()
+    # Bid (allow blank so timeouts don’t crash; we’ll treat None as 0)
+    bid = models.CurrencyField(min=0, max=100, blank=True)
 # -------------------- helpers about sessions/rules --------------------
 
 def session_no_and_round_in_session(round_number: int):
