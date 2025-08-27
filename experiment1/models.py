@@ -2,6 +2,7 @@
 # The new, correct imports
 from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, cu
 from otree import models
+from otree.database import CurrencyField
 from random import randint, choice
 
 class C(BaseConstants):
