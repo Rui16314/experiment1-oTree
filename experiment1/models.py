@@ -1,9 +1,8 @@
 # experiment1/models.py
-from otree.api import *
-
-from otree.db import models
+# The new, correct imports
+from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, cu
+from otree import models
 from random import randint, choice
-
 
 class C(BaseConstants):
     NAME_IN_URL = 'experiment1'
