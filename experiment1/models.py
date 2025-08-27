@@ -1,8 +1,6 @@
 # experiment1/models.py
-# The new, correct imports
 from otree.api import BaseConstants, BaseSubsession, BaseGroup, BasePlayer, cu
-from otree import models
-from otree.database import CurrencyField
+from otree.db import models  # Changed this import
 from random import randint, choice
 
 class C(BaseConstants):
@@ -21,7 +19,7 @@ class Subsession(BaseSubsession):
 
 class Group(BaseGroup):
     # Price actually paid by the winner in this round
-    price = CurrencyField(initial=cu(0))
+    price = models.CurrencyField(initial=cu(0))
     # Convenience: who won (1 or 2), 0 means not set yet
     winner_id_in_group = models.IntegerField(initial=0)
 
@@ -29,7 +27,7 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     # Private valuation (0–100, two decimals)
     valuation = models.CurrencyField()
-    # Bid (allow blank so timeouts don’t crash; we’ll treat None as 0)
+    # Bid (allow blank so timeouts don't crash; we'll treat None as 0)
     bid = models.CurrencyField(min=0, max=100, blank=True)
 
 
@@ -71,7 +69,7 @@ def _draw_valuation() -> Currency:
 
 def creating_session(subsession: Subsession):
     """
-    - Set matching according to the session’s rule.
+    - Set matching according to the session's rule.
     - Draw valuations for each player in the round.
     """
     s_no, r_in_s = session_no_and_round_in_session(subsession.round_number)
