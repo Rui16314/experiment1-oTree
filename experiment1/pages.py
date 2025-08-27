@@ -55,6 +55,23 @@ class ResultsWaitPage(WaitPage):
     body_text = "Waiting for the other participant."
     after_all_players_arrive = set_group_payoffs
 
+class Results(Page):
+    def vars_for_template(self):
+        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+        other = self.player.get_others_in_group()[0]
+        you_won = self.group.winner_id_in_group == self.player.id_in_group
+        return dict(
+            session_no=s_no,
+            round_in_session=r_in_s,
+            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+            your_bid=self.player.bid,
+            opp_bid=other.bid,
+            valuation=self.player.valuation,
+            price=self.group.price,
+            you_won=you_won,
+        )
+
+
 
 
 # ... (existing classes like Instructions, Bid, ResultsWaitPage, Results) ...
