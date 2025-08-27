@@ -57,16 +57,17 @@ class Bid(Page):
             return
         return {0: dict(sender=self.player.id_in_group, text=text)}
 
-    def vars_for_template(self):
-        s_no, r_in_s = session_no_and_round_in_session(self.round_number)
-        rules = rules_for_round(self.round_number)
-        return dict(
-            session_no=s_no,
-            round_in_session=r_in_s,
-            ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
-            valuation=self.player.valuation,
-            chat_enabled=rules['chat'],
-        )
+   def vars_for_template(self):
+    s_no, r_in_s = session_no_and_round_in_session(self.round_number)
+    rules = rules_for_round(self.round_number)
+    return dict(
+        session_no=s_no,
+        round_in_session=r_in_s,
+        ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
+        valuation=self.player.valuation,
+        chat_enabled=rules['chat'],
+        # player.id_in_group is automatically available in templates
+    )
 
     def before_next_page(self, timeout_happened):
         if timeout_happened and self.player.bid is None:
