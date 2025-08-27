@@ -53,8 +53,7 @@ class Bid(Page):
 class ResultsWaitPage(WaitPage):
     title_text = "Please wait"
     body_text = "Waiting for the other participant."
-    after_all_players_arrive = set_group_payoffs
-
+    after_all_players_arrive = 'set_payoffs'
 
 class Results(Page):
     def vars_for_template(self):
