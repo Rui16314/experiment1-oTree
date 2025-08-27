@@ -90,7 +90,6 @@ class FinalResults(Page):
         return self.round_number == C.NUM_ROUNDS
 
     def vars_for_template(self):
-        # Correctly get all players and groups from the entire session
         all_players = self.session.get_players()
         all_groups = self.session.get_groups()
 
@@ -106,13 +105,14 @@ class FinalResults(Page):
             valuations = [p.valuation for p in session_players]
             bids = [p.bid for p in session_players]
             
-            bins = [[] for _ in range(11)]
+            bins = [[] for _ in range(10)]  # Changed to 10 bins (0-90) to match image
             for v, b in zip(valuations, bids):
                 if b is not None:
                     bin_index = min(int(v // 10), 9)
                     bins[bin_index].append(b)
 
-            avg_bids = [sum(b) / len(b) if b else None for b in bins]
+            # Corrected logic to prevent division by zero
+            avg_bids = [sum(b) / len(b) if len(b) > 0 else None for b in bins]
             
             rules = rules_for_round((s_no - 1) * C.ROUNDS_PER_SESSION + 1)
             all_sessions_bids.append({
@@ -139,7 +139,7 @@ class FinalResults(Page):
             
             # 3) Overall Average Revenue
             all_revenues = [g.price for g in session_groups]
-            avg_revenue = sum(all_revenues) / len(all_revenues) if all_revenues else 0
+            avg_revenue = sum(all_revenues) / len(all_revenues) if len(all_revenues) > 0 else 0
             all_session_revenues.append({
                 'session_no': s_no,
                 'price_rule': rules['price_rule'],
