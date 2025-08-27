@@ -1,3 +1,4 @@
+{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
 {% block page_title %}Submit your bid{% endblock %}
 
@@ -6,7 +7,7 @@
 
 <p>Your valuation for this round is <b>{{ valuation }}</b>.</p>
 
-{% if chat_enabled %}
+{% if chat_enabled|default:False %}
   <div class="chat">
     <div><b>Chat with your opponent (before you bid)</b></div>
     <div id="msgs" class="chat-messages"></div>
@@ -17,12 +18,10 @@
   </div>
 {% endif %}
 
-<form method="post">
-  {% formfield player.bid label="Bid" %}
-  <button class="btn btn-primary" type="submit">Next</button>
-</form>
+{% formfield player.bid label="Bid" %}
+<button class="btn btn-primary" type="submit">Next</button>
 
-{% if chat_enabled %}
+{% if chat_enabled|default:False %}
 <script>
   const msgsEl = document.getElementById('msgs');
   const inputEl = document.getElementById('msg');
