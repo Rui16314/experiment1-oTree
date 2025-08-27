@@ -1,5 +1,7 @@
+# Your requirements.txt file
 otree
 sentry-sdk
 psycopg2-binary
 uvicorn
 websockets
+# Force a rebuild on Heroku
