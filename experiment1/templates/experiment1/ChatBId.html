@@ -1,66 +1,53 @@
 {% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
-
-{% block page_title %}Submit your bid (chat enabled){% endblock %}
+{% block page_title %}Submit your bid{% endblock %}
 
 {% block page_body %}
-  <p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+<p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
-  <div style="display: flex; gap: 20px;">
-    <div style="flex: 1;">
-      <p>Your valuation for this round is <strong>{{ valuation }}</strong> points.</p>
-      {% formfield player.bid label="Bid" %}
-      <button class="btn btn-primary" type="submit">Next</button>
-      <p class="muted" style="margin-top:.4rem">You can chat until you submit or time runs out (1 minute).</p>
-    </div>
+<p>Your valuation for this round is <b>{{ valuation }}</b>.</p>
 
-    <div style="flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
-      <div id="chatlog" style="height: 200px; overflow-y: auto; margin-bottom: 10px;" aria-live="polite"></div>
-      <div style="display: flex;">
-        <input id="msg" type="text" placeholder="Type a message…" autocomplete="off" style="flex: 1; margin-right: 5px;" />
-        <button type="button" id="send" class="btn btn-secondary">Send</button>
-      </div>
+{% if chat_enabled %}
+  <div class="chat">
+    <div><b>Chat with your opponent (before you bid)</b></div>
+    <div id="msgs" class="chat-messages"></div>
+    <div class="input-group">
+      <input id="msg" class="form-control" type="text" placeholder="Type a message…">
+      <button class="btn btn-primary" type="button" onclick="sendMsg()">Send</button>
     </div>
   </div>
-{% endblock %}
+{% endif %}
 
-{% block scripts %}
+{% formfield player.bid label="Bid" %}
+<button class="btn btn-primary" type="submit">Next</button>
+
+{% if chat_enabled %}
 <script>
-  const myId = {{ player.id_in_group|json }};  <!-- Changed to player.id_in_group -->
-  const chatlog = document.getElementById('chatlog');
-  const input = document.getElementById('msg');
-  const sendBtn = document.getElementById('send');
+  const msgsEl = document.getElementById('msgs');
+  const inputEl = document.getElementById('msg');
 
-  function addMsg(senderId, text) {
+  function append(sender, text) {
     const row = document.createElement('div');
-    row.style.marginBottom = '5px';
-    row.textContent = (senderId === myId ? 'You: ' : 'Opponent: ') + text;
-    chatlog.appendChild(row);
-    chatlog.scrollTop = chatlog.scrollHeight;
-  }
-
-  function sendMsg() {
-    const text = (input.value || '').trim();
-    if (!text) return;
-    liveSend({text: text});
-    addMsg(myId, text); // local echo
-    input.value = '';
+    row.className = 'chat-row';
+    row.textContent = `[P${sender}] ${text}`;
+    msgsEl.appendChild(row);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
   }
 
   function liveRecv(data) {
     if (data && data.text) {
-      addMsg(data.sender, data.text);
+      append(data.sender, data.text);
     }
   }
 
-  window.addEventListener('load', function () {
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMsg();
-      }
-    });
-    sendBtn.addEventListener('click', sendMsg);
-  });
+  function sendMsg() {
+    const t = (inputEl.value || '').trim();
+    if (!t) return;
+    liveSend({text: t});
+    append('{{ player.id_in_group }}', t); // local echo
+    inputEl.value = '';
+    inputEl.focus();
+  }
 </script>
+{% endif %}
 {% endblock %}
