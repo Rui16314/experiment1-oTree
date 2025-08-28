@@ -36,12 +36,12 @@ class Instructions(RoundInfo, Page):
         s_no = ctx['session_no']
         # Map session -> partial file to include
         partial_map = {
-            1: 'experiment1/instructions/Instructions_S1_First.html',
-            2: 'experiment1/instructions/Instructions_S2_FirstRepeated.html',
-            3: 'experiment1/instructions/Instructions_S3_FirstRepeated_Chat.html',
-            4: 'experiment1/instructions/Instructions_S4_Second.html',
-            5: 'experiment1/instructions/Instructions_S5_SecondRepeated.html',
-            6: 'experiment1/instructions/Instructions_S6_SecondRepeated_Chat.html',
+            1: 'experiment1/Instructions_S1_First.html',
+            2: 'experiment1/Instructions_S2_FirstRepeated.html',
+            3: 'experiment1/Instructions_S3_FirstRepeated_Chat.html',
+            4: 'experiment1/Instructions_S4_Second.html',
+            5: 'experiment1/Instructions_S5_SecondRepeated.html',
+            6: 'experiment1/Instructions_S6_SecondRepeated_Chat.html',
         }
         ctx['session_partial'] = partial_map[s_no]
         # Show "General Instructions" only before Session 1
