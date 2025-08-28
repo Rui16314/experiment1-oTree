@@ -1,28 +1,22 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
-{% block page_title %}Submit your bid{% endblock %}
+{% load otree static %}
 
-{% block page_body %}
-<p>Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
-<p>Your valuation: <b>{{ valuation }}</b></p>
+{% block form_content %}
+<div class="bid-page">
+    <h3>Place Your Bid</h3>
+    
+    <div class="auction-info">
+        {% if view.round_number %}
+        <p>Round: {{ view.round_number }} / {{ Constants.num_rounds }}</p>
+        {% endif %}
+    </div>
 
-{% if chat_enabled %}
-<div>
-    <div><b>Chat with your opponent</b></div>
-    <div id="msgs"></div>
-    <div>
-        <input id="msg" type="text" placeholder="Type a message…">
-        <button type="button" onclick="sendMsg()">Send</button>
+    <div class="bid-form">
+        {{ formfields }}
+    </div>
+
+    <div class="navigation">
+        {{ next_button }}
     </div>
 </div>
-{% endif %}
-
-{% formfield player.bid label="Bid" %}
-<button type="submit">Next</button>
-
-{% if chat_enabled %}
-<script>
-// Chat JavaScript here
-</script>
-{% endif %}
 {% endblock %}
