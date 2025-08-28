@@ -15,7 +15,7 @@
         {% endif %}
         
         <form method="post">
-            #{% csrf_token %}
+            {% csrf_token %}
             {% block page_body %}{% endblock %}
         </form>
     </div>
