@@ -2,22 +2,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'instructions.css' %}">
+    <style>
+        body { font-family: sans-serif; line-height: 1.45; }
+        .page { max-width: 900px; margin: 24px auto; }
+        .timer { margin: 12px 0; padding: 0.5rem; background: #fff6d6; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <div style="max-width: 900px; margin: 24px auto;">
+    <div class="page">
         {% if timeout_seconds %}
-        <div style="margin: 12px 0; padding: 0.5rem; background: #fff6d6; border-radius: 8px;">
-            Time left: {{ timeout_seconds_display }}
-        </div>
+            <div class="timer">Time left: {{ timeout_seconds }} seconds</div>
         {% endif %}
-        
-        <form method="post">
-            {% csrf_token %}
-            {% block page_body %}{% endblock %}
-        </form>
+
+        {% block content %}{% endblock %}
     </div>
 </body>
 </html>
