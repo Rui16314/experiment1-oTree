@@ -1,53 +1,25 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
-{% block page_title %}Submit your bid{% endblock %}
+{% load otree static %}
 
-{% block page_body %}
-<p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
-
-<p>Your valuation for this round is <b>{{ valuation }}</b>.</p>
-
-{% if chat_enabled %}
-  <div class="chat">
-    <div><b>Chat with your opponent (before you bid)</b></div>
-    <div id="msgs" class="chat-messages"></div>
-    <div class="input-group">
-      <input id="msg" class="form-control" type="text" placeholder="Type a message…">
-      <button class="btn btn-primary" type="button" onclick="sendMsg()">Send</button>
+{% block form_content %}
+<div class="chat-bid-page">
+    <div class="chat-section">
+        <h4>Chat</h4>
+        <div class="chat-messages">
+            <!-- Chat messages will go here -->
+        </div>
+        <div class="chat-input">
+            <!-- Chat input form if needed -->
+        </div>
     </div>
-  </div>
-{% endif %}
 
-{% formfield player.bid label="Bid" %}
-<button class="btn btn-primary" type="submit">Next</button>
+    <div class="bid-section">
+        <h4>Place Your Bid</h4>
+        {{ formfields }}
+    </div>
 
-{% if chat_enabled %}
-<script>
-  const msgsEl = document.getElementById('msgs');
-  const inputEl = document.getElementById('msg');
-
-  function append(sender, text) {
-    const row = document.createElement('div');
-    row.className = 'chat-row';
-    row.textContent = `[P${sender}] ${text}`;
-    msgsEl.appendChild(row);
-    msgsEl.scrollTop = msgsEl.scrollHeight;
-  }
-
-  function liveRecv(data) {
-    if (data && data.text) {
-      append(data.sender, data.text);
-    }
-  }
-
-  function sendMsg() {
-    const t = (inputEl.value || '').trim();
-    if (!t) return;
-    liveSend({text: t});
-    append('{{ player.id_in_group }}', t); // local echo
-    inputEl.value = '';
-    inputEl.focus();
-  }
-</script>
-{% endif %}
+    <div class="navigation">
+        {{ next_button }}
+    </div>
+</div>
 {% endblock %}
