@@ -6,18 +6,31 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'instructions.css' %}">
     <style>
-        body { font-family: sans-serif; line-height: 1.45; }
-        .page { max-width: 900px; margin: 24px auto; }
-        .timer { margin: 12px 0; padding: 0.5rem; background: #fff6d6; border-radius: 8px; }
+        body { 
+            font-family: sans-serif; 
+            line-height: 1.45;
+            margin: 0;
+            padding: 20px;
+        }
+        .page { 
+            max-width: 900px; 
+            margin: 0 auto;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="page">
         {% if timeout_seconds %}
-            <div class="timer">Time left: {{ timeout_seconds }} seconds</div>
+            <div style="margin: 12px 0; padding: 0.5rem; background: #fff6d6; border-radius: 8px;">
+                Time left: {{ timeout_seconds }} seconds
+            </div>
         {% endif %}
 
-        {% block content %}{% endblock %}
+        <form method="post">
+            {% csrf_token %}
+            {% block content %}{% endblock %}
+        </form>
     </div>
 </body>
 </html>
