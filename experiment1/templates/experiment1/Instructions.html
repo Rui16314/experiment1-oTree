@@ -1,14 +1,25 @@
-{% load otree %}
 {% extends "experiment1/BaseAuction.html" %}
+{% load otree static %}
 
-{% block page_title %}Instructions{% endblock %}
-
-{% block page_body %}
-  {% if show_general %}
-    {% include "experiment1/Instructions_General.html" %}
-  {% endif %}
-
-  {% include session_partial %}
-
-  <div class="mt-3">{% next_button %}</div>
+{% block form_content %}
+<div class="instructions">
+    <h2>Instructions</h2>
+    <div class="content">
+        {% block instructions_content %}
+        <!-- Your instructions content here -->
+        {% endblock %}
+    </div>
+    
+    {% if formfields %}
+    <div class="form-fields">
+        {{ formfields }}
+    </div>
+    {% endif %}
+    
+    {% if next_button %}
+    <div class="next-button">
+        {{ next_button }}
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
