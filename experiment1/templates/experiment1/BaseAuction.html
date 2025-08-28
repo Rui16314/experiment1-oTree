@@ -20,7 +20,7 @@
 </head>
 <body>
   <div class="page">
-    {% if timeout_seconds %}
+    {% if timeout_seconds|default:0 %}
       <div class="timer">
         Time left to complete this page: {{ timeout_seconds_display }}
       </div>
