@@ -24,6 +24,8 @@ class RoundInfo:
         }
 
 class Instructions(RoundInfo, Page):
+    timeout_seconds = 300  # 5 minutes for instructions
+    
     def is_displayed(self):
         # only first round of each 10-round session
         s_no, r_in_s = session_no_and_round_in_session(self.round_number)
@@ -44,12 +46,14 @@ class Instructions(RoundInfo, Page):
         ctx['session_partial'] = partial_map[s_no]
         # Show "General Instructions" only before Session 1
         ctx['show_general'] = (s_no == 1)
+        ctx['timeout_seconds'] = self.timeout_seconds
+        ctx['timeout_seconds_display'] = self.timeout_seconds
         return ctx
 
 class Bid(Page):
     form_model = 'player'
     form_fields = ['bid']
-    timeout_seconds = 60
+    timeout_seconds = 60  # 1 minute for bidding
 
     def live_method(self, data):
         text = (data or {}).get('text', '').strip()
@@ -66,6 +70,8 @@ class Bid(Page):
             ROUNDS_PER_SESSION=C.ROUNDS_PER_SESSION,
             valuation=self.player.valuation,
             chat_enabled=rules['chat'],
+            timeout_seconds=self.timeout_seconds,
+            timeout_seconds_display=self.timeout_seconds,
         )
 
     def before_next_page(self, timeout_happened):
@@ -78,6 +84,8 @@ class ResultsWaitPage(WaitPage):
     after_all_players_arrive = set_group_payoffs
 
 class Results(Page):
+    timeout_seconds = 30  # 30 seconds to view results
+    
     def vars_for_template(self):
         s_no, r_in_s = session_no_and_round_in_session(self.round_number)
         other = self.player.get_others_in_group()[0]
@@ -91,9 +99,13 @@ class Results(Page):
             valuation=self.player.valuation,
             price=self.group.price,
             you_won=you_won,
+            timeout_seconds=self.timeout_seconds,
+            timeout_seconds_display=self.timeout_seconds,
         )
 
 class SessionSummary(Page):
+    timeout_seconds = 120  # 2 minutes for summary
+    
     def is_displayed(self):
         s_no, r_in_s = session_no_and_round_in_session(self.round_number)
         return r_in_s == C.ROUNDS_PER_SESSION and s_no < 6
@@ -108,10 +120,14 @@ class SessionSummary(Page):
             'bucket_y': [],     # Replace with actual data
             'rev_by_round': [], # Replace with actual data
             'per_player': [],   # Replace with actual data
-            'rev_overall': None # Replace with actual calculation
+            'rev_overall': None, # Replace with actual calculation
+            'timeout_seconds': self.timeout_seconds,
+            'timeout_seconds_display': self.timeout_seconds,
         }
 
 class FinalResults(Page):
+    timeout_seconds = 180  # 3 minutes for final results
+    
     def is_displayed(self):
         return self.round_number == C.NUM_ROUNDS
 
@@ -165,7 +181,9 @@ class FinalResults(Page):
         return dict(
             all_session_bids=all_sessions_bids,
             all_session_revenues_by_round=all_session_revenues_by_round,
-            all_session_revenues=all_session_revenues
+            all_session_revenues=all_session_revenues,
+            timeout_seconds=self.timeout_seconds,
+            timeout_seconds_display=self.timeout_seconds,
         )
 
 page_sequence = [Instructions, Bid, ResultsWaitPage, Results, SessionSummary, FinalResults]
