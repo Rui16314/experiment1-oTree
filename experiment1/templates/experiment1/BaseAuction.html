@@ -28,7 +28,7 @@
         {% endif %}
 
         <form method="post">
-            {% csrf_token %}
+            {{ csrf_token|safe }}  <!-- FIXED LINE -->
             {% block content %}{% endblock %}
         </form>
     </div>
