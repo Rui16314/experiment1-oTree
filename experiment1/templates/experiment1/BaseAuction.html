@@ -27,9 +27,10 @@
             </div>
         {% endif %}
 
-       
+        <form method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             {% block content %}{% endblock %}
-        
+        </form>
     </div>
 </body>
 </html>
