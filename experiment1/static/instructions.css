@@ -36,4 +36,17 @@
 .msg.me { text-align:right; font-weight:600; }
 .msg.them { text-align:left; }
 
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: sans-serif;
+    line-height: 1.5;
+}
 
+.page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
