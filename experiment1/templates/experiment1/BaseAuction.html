@@ -18,7 +18,8 @@
 </head>
 <body>
   <div class="page">
-    {% if timeout_seconds >0 %}
+    {# SIMPLE CHECK - oTree can only handle basic variable names #}
+    {% if timeout_seconds %}
       <div class="timer">
         Time left to complete this page: {{ timeout_seconds_display }}
       </div>
