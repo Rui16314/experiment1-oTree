@@ -1,19 +1,18 @@
 {% extends "experiment1/BaseAuction.html" %}
-{% block page_title %}Results{% endblock %}
+{% load otree static %}
 
-{% block page_body %}
-<p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
+{% block form_content %}
+<div class="results-page">
+    <h2>Results</h2>
+    
+    <div class="results-content">
+        {% block results_content %}
+        <!-- Your results content here -->
+        {% endblock %}
+    </div>
 
-<p><b>Your bid:</b> {{ your_bid }}</p>
-<p><b>Opponent's bid:</b> {{ opp_bid }}</p>
-<p><b>Price paid:</b> {{ price }}</p>
-<p><b>Your valuation:</b> {{ valuation }}</p>
-
-{% if you_won %}
-  <div class="alert success">You won this round.</div>
-{% else %}
-  <div class="alert">You did not win this round.</div>
-{% endif %}
-
-<div class="mt-3">{% next_button %}</div>
+    <div class="navigation">
+        {{ next_button }}
+    </div>
+</div>
 {% endblock %}
