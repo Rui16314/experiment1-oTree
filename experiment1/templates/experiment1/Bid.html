@@ -7,7 +7,7 @@
 
 <p>Your valuation for this round is <b>{{ valuation }}</b>.</p>
 
-{% if chat_enabled|default:False %}
+{% if chat_enabled %}
   <div class="chat">
     <div><b>Chat with your opponent (before you bid)</b></div>
     <div id="msgs" class="chat-messages"></div>
@@ -21,7 +21,7 @@
 {% formfield player.bid label="Bid" %}
 <button class="btn btn-primary" type="submit">Next</button>
 
-{% if chat_enabled|default:False %}
+{% if chat_enabled %}
 <script>
   const msgsEl = document.getElementById('msgs');
   const inputEl = document.getElementById('msg');
@@ -51,5 +51,4 @@
 </script>
 {% endif %}
 {% endblock %}
-
 
