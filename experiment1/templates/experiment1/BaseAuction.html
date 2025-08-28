@@ -1,34 +1,23 @@
-{% load otree static %}<!doctype html>
+{% load otree static %}
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>{% block title %}{% block page_title %}{% endblock %}{% endblock %}</title>
-
-  <link rel="stylesheet" href="{% static 'instructions.css' %}">
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.45; }
-    .muted { color:#666; }
-    .alert { padding: .75rem 1rem; background:#eee; border-radius:8px; }
-    .alert.success { background:#d8f5d0; }
-    .callout { background:#f7f7fb; padding:1rem 1.25rem; border-radius:10px; }
-    .page { max-width: 900px; margin: 24px auto; }
-    .timer { margin: 12px 0; padding: .5rem; background: #fff6d6; border-radius: 8px; }
-    .mt-2 { margin-top: .5rem; } .mt-3 { margin-top: 1rem; } .mb-2 { margin-bottom: .5rem; }
-  </style>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'instructions.css' %}">
 </head>
 <body>
-  <div class="page">
-    {% if timeout_seconds %}
-      <div class="timer">
-        Time left to complete this page: {{ timeout_seconds_display }}
-      </div>
-    {% endif %}
-
-    {# IMPORTANT: Ensure the form wraps everything #}
-    <form method="post">
-      {% csrf_token %}
-      {% block page_body %}{% endblock %}
-    </form>
-  </div>
+    <div style="max-width: 900px; margin: 24px auto;">
+        {% if timeout_seconds %}
+        <div style="margin: 12px 0; padding: 0.5rem; background: #fff6d6; border-radius: 8px;">
+            Time left: {{ timeout_seconds_display }}
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            {% block page_body %}{% endblock %}
+        </form>
+    </div>
 </body>
 </html>
