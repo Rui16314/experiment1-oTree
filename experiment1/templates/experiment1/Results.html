@@ -4,12 +4,12 @@
 {% block page_body %}
 <p class="muted">Session {{ session_no }} — Round {{ round_in_session }} of {{ ROUNDS_PER_SESSION }}</p>
 
-<p><b>Your bid:</b> {{ your_bid|default:"Not submitted" }}</p>
-<p><b>Opponent's bid:</b> {{ opp_bid|default:"Not available" }}</p>
-<p><b>Price paid:</b> {{ price|default:0 }}</p>
-<p><b>Your valuation:</b> {{ valuation|default:0 }}</p>
+<p><b>Your bid:</b> {{ your_bid }}</p>
+<p><b>Opponent's bid:</b> {{ opp_bid }}</p>
+<p><b>Price paid:</b> {{ price }}</p>
+<p><b>Your valuation:</b> {{ valuation }}</p>
 
-{% if you_won|default:False %}
+{% if you_won %}
   <div class="alert success">You won this round.</div>
 {% else %}
   <div class="alert">You did not win this round.</div>
